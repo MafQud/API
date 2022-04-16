@@ -7,11 +7,6 @@ from .validators import is_phone
 
 
 class User(AbstractUser):
-    class Meta:
-        db_table = "users"
-        verbose_name = "user"
-        verbose_name_plural = "users"
-
     first_name = None  # type: ignore
     last_name = None  # type: ignore
 
@@ -23,6 +18,11 @@ class User(AbstractUser):
     id_photo_url = models.ImageField(upload_to="id-photos/")
 
     firebase_token = models.CharField(max_length=256, unique=True, blank=True)
+
+    class Meta:
+        db_table = "users"
+        verbose_name = "user"
+        verbose_name_plural = "users"
 
     def renew_id(self, days: int = 365) -> None:
         self.id_exp_date = timezone.now() + timezone.timedelta(days=days)
