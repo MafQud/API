@@ -277,3 +277,6 @@ api/media/
 .env
 .envs/*
 !.envs/.local/
+
+# VScode
+.vscode
