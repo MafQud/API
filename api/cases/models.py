@@ -27,7 +27,7 @@ class Case(models.Model):
         FOUND = "F", _("Found")
 
     type = models.CharField(max_length=1, choices=Types.choices)
-    user = models.ForeignKey(User, related_name="cases")
+    user = models.ForeignKey(User, related_name="cases", on_delete=models.CASCADE)
     state = FSMField(
         max_length=2,
         choices=States.choices,
@@ -50,7 +50,7 @@ class Case(models.Model):
     # Pass the case to the model then add matched cases if any.
     @transition(field=state, source=States.PENDING, target=States.ACTIVE)
     def activate(self):
-        from services import case_matching_binding, process_case
+        from .services import case_matching_binding, process_case
 
         matches = process_case(self)
         case_matching_binding(matches)
