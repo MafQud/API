@@ -1,26 +1,39 @@
 from django.contrib.auth.models import AbstractUser
-from django.db.models import CharField
-from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
+from django.db import models
+from django.utils import timezone
+
+from ..locations.models import Location
+from .validators import is_phone
 
 
 class User(AbstractUser):
-    """
-    Default custom user model for API.
-    If adding fields that need to be filled at user signup,
-    check forms.SignupForm and forms.SocialSignupForms accordingly.
-    """
-
-    #: First and last name do not cover name patterns around the globe
-    name = CharField(_("Name of User"), blank=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
 
-    def get_absolute_url(self):
-        """Get url for user's detail view.
+    full_name = models.CharField(max_length=256)
+    email = models.EmailField(null=True, blank=True)
+    username = models.CharField(max_length=10, unique=True, validators=[is_phone])
 
-        Returns:
-            str: URL for user detail.
+    id_exp_date = models.DateTimeField(null=True, blank=True)
+    id_photo_url = models.ImageField(upload_to="id-photos/", blank=True)
 
-        """
-        return reverse("users:detail", kwargs={"username": self.username})
+    firebase_token = models.CharField(max_length=256, unique=True, blank=True)
+
+    location = models.OneToOneField(
+        Location, on_delete=models.CASCADE, null=True, related_name="user"
+    )
+
+    class Meta:
+        db_table = "users"
+        verbose_name = "user"
+        verbose_name_plural = "users"
+
+    @property
+    def is_verified(self) -> bool:
+        return self.id_exp_date > timezone.now()
+
+    def renew_id(self, days: int = 365) -> None:
+        self.id_exp_date = timezone.now() + timezone.timedelta(days=days)
+
+    def __str__(self) -> str:
+        return self.username
