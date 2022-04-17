@@ -1,10 +1,11 @@
-from pathlib import Path
 from typing import Optional
+
+from django.conf import settings
 
 from .models import City, Governorate, Location
 from .utils import read_json
 
-cwd = Path.cwd
+apps_dir = settings.APPS_DIR
 
 
 def populate_govs() -> None:
@@ -12,8 +13,8 @@ def populate_govs() -> None:
     Populates governorates and cities tables
     """
     # Read json files
-    govs_dict = read_json(cwd / "govs.json")
-    cities_dict = read_json(cwd / "cities.json")
+    govs_dict = read_json(path=apps_dir / "locations" / "govs.json")
+    cities_dict = read_json(path=apps_dir / "locations" / "cities.json")
 
     # Reset tables
     Governorate.objects.all().delete()
@@ -31,6 +32,7 @@ def populate_govs() -> None:
         # Insert cities in gov
         for city in cities_dict["data"][gov["id"]]:
             c = City(
+                gov=g,
                 pk=city["id"],
                 name_ar=city["city_name_ar"],
                 name_en=city["city_name_en"],
