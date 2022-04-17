@@ -4,9 +4,9 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
-from users.models import User
 
-from .services import case_matching_binding, process_case
+from ..locations.models import Location
+from ..users.models import User
 
 
 class Case(models.Model):
@@ -34,7 +34,7 @@ class Case(models.Model):
         default=States.PENDING,
         editable=False,
     )
-    matches = models.ManyToManyField("self", blank=True)
+    location = models.OneToOneField(Location, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     posted_at = models.DateTimeField(null=True, default=None, blank=True)
@@ -50,6 +50,8 @@ class Case(models.Model):
     # Pass the case to the model then add matched cases if any.
     @transition(field=state, source=States.PENDING, target=States.ACTIVE)
     def activate(self):
+        from services import case_matching_binding, process_case
+
         matches = process_case(self)
         case_matching_binding(matches)
         self.is_active = True
@@ -81,17 +83,18 @@ class CaseDetails(models.Model):
         FEMALE = "F", _("Female")
         UNKNOWN = "U", _("Unknown")
 
+    case = models.OneToOneField(Case, on_delete=models.CASCADE)
     name = models.CharField(max_length=128, blank=True, null=True)
     gender = models.CharField(max_length=1, choices=Gender.choices)
     age = models.SmallIntegerField(null=True, default=None, blank=True)
+    location = models.OneToOneField(Location, on_delete=models.CASCADE)
     last_seen = models.DateTimeField(null=True, default=None, blank=True)
     description = models.TextField(blank=True, null=True)
-    case = models.OneToOneField(Case, on_delete=models.CASCADE)
 
 
 class CaseMatch(models.Model):
-    missing = models.ForeignKey(Case, on_delete=models.CASCADE)
-    found = models.ForeignKey(Case, on_delete=models.CASCADE)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="matches")
+    match = models.ForeignKey(Case, on_delete=models.CASCADE)
     score = models.SmallIntegerField(
         validators=[MaxValueValidator(100), MinValueValidator(1)]
     )
