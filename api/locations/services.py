@@ -1,6 +1,7 @@
 from pathlib import Path
+from typing import Optional
 
-from .models import City, Governorate
+from .models import City, Governorate, Location
 from .utils import read_json
 
 cwd = Path.cwd
@@ -35,3 +36,19 @@ def populate_govs() -> None:
                 name_en=city["city_name_en"],
             )
             c.save()
+
+
+def create_location(
+    *,
+    lon: Optional[float],
+    lat: Optional[float],
+    address: Optional[str],
+    gov: Governorate,
+    city: City
+) -> Location:
+
+    loc = Location(lon=lon, lat=lat, address=address, gov=gov, city=city)
+    loc.full_clean()
+    loc.save()
+
+    return loc

@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -29,12 +30,16 @@ class Governorate(models.Model):
 
 
 class Location(models.Model):
-    lon = models.DecimalField()
-    lat = models.DecimalField()
+    lon = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    lat = models.DecimalField(max_digits=8, decimal_places=6, null=True)
     address = models.CharField(max_length=512, blank=True)
 
     gov = models.ForeignKey(Governorate, on_delete=models.PROTECT)
     city = models.ForeignKey(City, on_delete=models.PROTECT)
+
+    def clean(self):
+        if self.city.gov == self.gov:
+            raise ValidationError("City does not belong to Governorate")
 
     class Meta:
         db_table = "locations"
