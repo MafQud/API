@@ -42,9 +42,9 @@ def populate_govs() -> None:
 
 def create_location(
     *,
-    lon: Optional[float],
-    lat: Optional[float],
-    address: Optional[str],
+    lon: Optional[float] = None,
+    lat: Optional[float] = None,
+    address: Optional[str] = None,
     gov: Governorate,
     city: City
 ) -> Location:
