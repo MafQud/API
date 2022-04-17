@@ -1,3 +1,5 @@
-# from django.contrib import admin
+from django.contrib import admin
 
-# Register your models here.
+from .models import Case, CaseDetails, CaseMatch, CasePhoto
+
+admin.site.register((Case, CaseDetails, CaseMatch, CasePhoto))
