@@ -4,9 +4,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
-from users.models import User
 
-from .services import case_matching_binding, process_case
+from ..users.models import User
 
 
 class Case(models.Model):
@@ -27,7 +26,7 @@ class Case(models.Model):
         FOUND = "F", _("Found")
 
     type = models.CharField(max_length=1, choices=Types.choices)
-    user = models.ForeignKey(User, related_name="cases")
+    user = models.ForeignKey(User, related_name="cases", on_delete=models.CASCADE)
     state = FSMField(
         max_length=2,
         choices=States.choices,
@@ -50,6 +49,8 @@ class Case(models.Model):
     # Pass the case to the model then add matched cases if any.
     @transition(field=state, source=States.PENDING, target=States.ACTIVE)
     def activate(self):
+        from .services import case_matching_binding, process_case
+
         matches = process_case(self)
         case_matching_binding(matches)
         self.is_active = True
