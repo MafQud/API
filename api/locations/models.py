@@ -1,5 +1,5 @@
-from django.core.exceptions import ValidationError
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 
 class Governorate(models.Model):
@@ -40,7 +40,7 @@ class Location(models.Model):
     city = models.ForeignKey(City, on_delete=models.PROTECT)
 
     def clean(self):
-        if self.city.gov == self.gov:
+        if self.city.gov != self.gov:
             raise ValidationError("City does not belong to Governorate")
 
     class Meta:
