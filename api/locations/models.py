@@ -32,8 +32,8 @@ class City(models.Model):
 
 
 class Location(models.Model):
-    lon = models.DecimalField(max_digits=9, decimal_places=6, null=True)
-    lat = models.DecimalField(max_digits=8, decimal_places=6, null=True)
+    lon = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    lat = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
     address = models.CharField(max_length=512, blank=True)
 
     gov = models.ForeignKey(Governorate, on_delete=models.PROTECT)

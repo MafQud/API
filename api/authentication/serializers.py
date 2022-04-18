@@ -1,6 +1,7 @@
 from typing import Dict
 
 from dj_rest_auth.registration.serializers import RegisterSerializer
+from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -36,7 +37,7 @@ class RegisterSerializer(RegisterSerializer):
 
         return id
 
-    def save(self) -> User:
+    def save(self, request: HttpRequest) -> User:
         gov = Governorate.objects.get(pk=self.validated_data["gov_id"])
         city = City.objects.get(pk=self.validated_data["city_id"])
 
