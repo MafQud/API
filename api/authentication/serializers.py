@@ -11,8 +11,11 @@ from ..users.services import create_user
 
 
 class RegisterSerializer(RegisterSerializer):
+    password1 = None
     password2 = None
 
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(write_only=True)
     full_name = serializers.CharField()
     gov_id = serializers.IntegerField(write_only=True)
     city_id = serializers.IntegerField(write_only=True)

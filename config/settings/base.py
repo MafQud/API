@@ -82,7 +82,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "api.users",
-    "api.auth",
+    "api.authentication",
     "api.locations",
     "api.cases",
 ]
@@ -318,7 +318,7 @@ REST_USE_JWT = True
 JWT_AUTH_COOKIE = "my-app-auth"
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    "REGISTER_SERIALIZER": "api.auth.serializers.RegisterSerializer"
+    "REGISTER_SERIALIZER": "api.authentication.serializers.RegisterSerializer"
 }
 
 # django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
