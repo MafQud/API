@@ -18,10 +18,8 @@ class CreateUserApi(APIView):
         firebase_token = serializers.CharField()
 
     def post(self, request):
-        print(request.data)
         serializer = self.InputSerializer(data=request.data)
-        serializer.is_valid()
-
+        serializer.is_valid(raise_exception=True)
         create_user(**serializer.validated_data)
 
         return Response(status=status.HTTP_201_CREATED)
