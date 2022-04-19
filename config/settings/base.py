@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "api.users",
     "api.locations",
     "api.cases",
+    "api.errors",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -307,6 +308,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "api.errors.handlers.custom_exception_handler",
 }
 
 # django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
