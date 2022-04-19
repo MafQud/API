@@ -1,6 +1,7 @@
 from typing import Dict
 
 from dj_rest_auth.registration.serializers import RegisterSerializer
+from dj_rest_auth.serializers import JWTSerializer
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -17,7 +18,7 @@ class RegisterSerializer(RegisterSerializer):
 
     email = serializers.EmailField(required=False)
     password = serializers.CharField(write_only=True)
-    full_name = serializers.CharField()
+    name = serializers.CharField()
     gov_id = serializers.IntegerField(write_only=True)
     city_id = serializers.IntegerField(write_only=True)
     firebase_token = serializers.CharField(write_only=True)
@@ -44,12 +45,16 @@ class RegisterSerializer(RegisterSerializer):
         location = create_location(gov=gov, city=city)
 
         user = create_user(
-            username=self.validated_data["username"],
-            password=self.validated_data["password"],
-            full_name=self.validated_data["full_name"],
-            email=self.validated_data["email"],
-            firebase_token=self.validated_data["firebase_token"],
+            username=self.validated_data.get("username"),
+            password=self.validated_data.get("password"),
+            name=self.validated_data.get("name"),
+            email=self.validated_data.get("email"),
+            firebase_token=self.validated_data.get("firebase_token"),
             location=location,
         )
 
         return user
+
+
+class JWTSerializer(JWTSerializer):
+    ...
