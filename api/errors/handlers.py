@@ -36,13 +36,15 @@ def custom_exception_handler(exc: Exception, ctx: Dict) -> Response:
     if response is None:
         return response
 
+    response_body = {}
     if isinstance(exc.detail, (list, dict)):
-        response.data["detail"] = response.data
-        response.data["message"] = "Validation error"
+        response_body["detail"] = response.data
+        response_body["message"] = "Validation error"
     else:
-        response.data["detail"] = {}
-        response.data["message"] = exc.detail
+        response_body["detail"] = {}
+        response_body["message"] = exc.detail
 
-    response.data["status_code"] = response.status_code
+    response_body["status_code"] = response.status_code
+    response.data = response_body
 
     return response
