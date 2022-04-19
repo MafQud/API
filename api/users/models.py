@@ -10,7 +10,7 @@ class User(AbstractUser):
     first_name = None  # type: ignore
     last_name = None  # type: ignore
 
-    full_name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256)
     email = models.EmailField(null=True, blank=True)
     username = models.CharField(max_length=10, unique=True, validators=[is_phone])
 
