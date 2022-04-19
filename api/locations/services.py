@@ -45,12 +45,15 @@ def create_location(
     lon: Optional[float] = None,
     lat: Optional[float] = None,
     address: Optional[str] = None,
-    gov: Governorate,
-    city: City
+    gov_id: int,
+    city_id: int
 ) -> Location:
 
+    gov = Governorate.objects.get(pk=gov_id)
+    city = City.objects.get(pk=city_id)
     loc = Location(lon=lon, lat=lat, address=address, gov=gov, city=city)
     loc.full_clean()
+    # loc.clean()
     loc.save()
 
     return loc
