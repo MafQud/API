@@ -3,6 +3,8 @@ from typing import Dict, List, Optional
 
 from django.db import transaction
 
+from api.locations.models import Location
+from api.locations.services import create_location
 from api.users.models import User
 
 from .models import Case, CaseDetails, CaseMatch, CasePhoto
@@ -20,13 +22,24 @@ def create_case_photo(*, case: Case, url: str) -> CasePhoto:
 
 
 @transaction.atomic
-def create_case(*, type: CaseType, user: User, photos_urls: List[str]) -> Case:
-    case = Case(type=type, user=user)
+def create_case(
+    *,
+    type: CaseType,
+    user: User,
+    location_data: Dict,
+    details_data: Dict,
+    photos_urls: List[str],
+) -> Case:
+    location: Location = create_location(**location_data)
+    case = Case(type=type, user=user, location=location)
+
     case.full_clean()
     case.save()
 
     for url in photos_urls:
         create_case_photo(case=case, url=url)
+
+    create_case_details(case=case, **details_data)
 
     return case
 
