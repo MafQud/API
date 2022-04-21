@@ -84,12 +84,14 @@ class CaseDetails(models.Model):
         UNKNOWN = "U", _("Unknown")
 
     case = models.OneToOneField(Case, on_delete=models.CASCADE)
-    name = models.CharField(max_length=128, blank=True, null=True)
+    name = models.CharField(max_length=128, null=True, blank=True)
     gender = models.CharField(max_length=1, choices=Gender.choices)
-    age = models.SmallIntegerField(null=True, default=None, blank=True)
-    location = models.OneToOneField(Location, on_delete=models.CASCADE)
-    last_seen = models.DateTimeField(null=True, default=None, blank=True)
-    description = models.TextField(blank=True, null=True)
+    age = models.SmallIntegerField(null=True, blank=True)
+    location = models.OneToOneField(
+        Location, on_delete=models.CASCADE, null=True, blank=True
+    )
+    last_seen = models.DateTimeField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
 
 class CaseMatch(models.Model):
