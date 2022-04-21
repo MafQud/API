@@ -26,11 +26,11 @@ def create_case(
     *,
     type: CaseType,
     user: User,
-    location_data: Dict,
-    details_data: Dict,
+    location: Dict,
+    details: Dict,
     photos_urls: List[str],
 ) -> Case:
-    location: Location = create_location(**location_data)
+    location: Location = create_location(**location)
     case = Case(type=type, user=user, location=location)
 
     case.full_clean()
@@ -39,9 +39,13 @@ def create_case(
     for url in photos_urls:
         create_case_photo(case=case, url=url)
 
-    create_case_details(case=case, **details_data)
+    create_case_details(case=case, **details)
 
     return case
+
+
+def update_case():
+    ...
 
 
 def create_case_details(
@@ -52,7 +56,11 @@ def create_case_details(
     age: Optional[int] = None,
     last_seen: Optional[date] = None,
     description: Optional[str] = None,
+    location: Optional[Dict] = None,
 ) -> CaseDetails:
+    loc = None
+    if location:
+        loc: Location = create_location(**location)
 
     case_details = CaseDetails(
         case=case,
@@ -61,6 +69,7 @@ def create_case_details(
         age=age,
         last_seen=last_seen,
         description=description,
+        location=loc,
     )
 
     case_details.full_clean()
