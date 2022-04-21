@@ -13,6 +13,7 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
+from api.cases.apis import CreateCaseApi
 from api.users.apis import CreateUserApi
 
 urlpatterns = [
@@ -38,9 +39,12 @@ urlpatterns += [
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
-    path("api/user/", CreateUserApi.as_view(), name="user_createeee"),
+    # TODO Pull out
+    path("api/user/", CreateUserApi.as_view(), name="user_create"),
+    path("api/cases/", CreateCaseApi.as_view(), name="case_create"),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
+    # Docs
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
         "api/docs/",
