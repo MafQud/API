@@ -2,6 +2,7 @@ from typing import Dict, Optional
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
 
 from api.common.services import model_update
 from api.locations.models import City, Governorate, Location
@@ -68,18 +69,22 @@ def update_location(
 ) -> Location:
 
     fields = ["lon", "lat", "address", "gov", "city"]
-    location = get_object_or_404(Location, id=location_id)
+    location = get_object_or_404(Location, pk=location_id)
 
+    gov_id = data.get("gov_id")
     city_id = data.get("city_id")
-    if city_id is not None and city_id != location.city.id:
-        city = get_object_or_404(City, city_id)
-        gov = get_object_or_404(Governorate, city.gov.id)
 
-        data["gov"] = gov
-        data["city"] = city
+    gov = get_object_or_404(Governorate, pk=gov_id)
+    city = get_object_or_404(City, pk=city_id)
 
-    location, has_updated = model_update(
-        intance=location,
+    if city.gov != gov:
+        raise ValidationError("City does not belong to Governorate")
+
+    data["gov"] = gov
+    data["city"] = city
+
+    location, _ = model_update(
+        instance=location,
         fields=fields,
         data=data,
     )

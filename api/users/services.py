@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from api.common.services import model_update
 from api.locations.models import Location
-from api.locations.services import create_location
+from api.locations.services import create_location, update_location
 from api.users.models import User
 
 
@@ -43,31 +43,26 @@ def update_user(
     user_id: int,
     data: Dict,
 ) -> User:
-    fields = ["name", "email", "location"]
+    fields = ["name", "email"]
 
     user = get_object_or_404(User, pk=user_id)
-    old_location = user.location
 
-    location_updated = False
+    gov_id = data.get("gov_id")
     city_id = data.get("city_id")
 
-    if (city_id is not None) and (user.location.city.id != city_id):
-        location = create_location(
-            gov_id=data.get("gov_id"),
-            city_id=data.get("city_id"),
+    if gov_id and city_id:
+        update_location(
+            location_id=user.location.id,
+            data={
+                "gov_id": data.get("gov_id"),
+                "city_id": data.get("city_id"),
+            },
         )
-        data["location"] = location
 
-        location_updated = True
-
-    user, has_updated = model_update(
+    user, _ = model_update(
         instance=user,
         fields=fields,
         data=data,
     )
 
-    # Clean old location
-    if location_updated:
-        old_location.delete()
-
-    return user, has_updated
+    return user
