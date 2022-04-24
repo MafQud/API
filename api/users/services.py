@@ -1,10 +1,12 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 
-from ..locations.models import Location
-from ..locations.services import create_location
-from .models import User
+from api.common.services import model_update
+from api.locations.models import Location
+from api.locations.services import create_location
+from api.users.models import User
 
 
 @transaction.atomic
@@ -33,3 +35,39 @@ def create_user(
     user.save()
 
     return user
+
+
+@transaction.atomic
+def update_user(
+    *,
+    user_id: int,
+    data: Dict,
+) -> User:
+    fields = ["name", "email", "location"]
+
+    user = get_object_or_404(User, pk=user_id)
+    old_location = user.location
+
+    location_updated = False
+    city_id = data.get("city_id")
+
+    if (city_id is not None) and (user.location.city.id != city_id):
+        location = create_location(
+            gov_id=data.get("gov_id"),
+            city_id=data.get("city_id"),
+        )
+        data["location"] = location
+
+        location_updated = True
+
+    user, has_updated = model_update(
+        instance=user,
+        fields=fields,
+        data=data,
+    )
+
+    # Clean old location
+    if location_updated:
+        old_location.delete()
+
+    return user, has_updated
