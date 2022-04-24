@@ -7,6 +7,7 @@ from api.files.views import (
     FileStandardUploadApi,
 )
 
+app_name = "files"
 urlpatterns = [
     path(
         "upload/",

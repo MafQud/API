@@ -1,14 +1,10 @@
 from django.urls import path
 
-from api.users.views import (
-    user_detail_view,
-    user_redirect_view,
-    user_update_view,
-)
+from api.users.apis import CreateUserApi, DetailUserApi, UpdateUserApi
 
 app_name = "users"
 urlpatterns = [
-    path("~redirect/", view=user_redirect_view, name="redirect"),
-    path("~update/", view=user_update_view, name="update"),
-    path("<str:username>/", view=user_detail_view, name="detail"),
+    path("create/", CreateUserApi.as_view(), name="create_user"),
+    path("<int:user_id>/", DetailUserApi.as_view(), name="get_user"),
+    path("<int:user_id>/update/", UpdateUserApi.as_view(), name="update_user"),
 ]
