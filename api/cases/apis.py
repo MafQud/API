@@ -1,4 +1,4 @@
-from rest_framework import permissions, serializers, status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -8,8 +8,6 @@ from api.users.models import User
 
 
 class CreateCaseApi(APIView):
-    permission_classes = [permissions.AllowAny]
-
     class InputSerializer(serializers.Serializer):
         type = serializers.CharField()
         photos_urls = serializers.ListField(child=serializers.URLField())
@@ -17,13 +15,13 @@ class CreateCaseApi(APIView):
             fields={
                 "gov_id": serializers.IntegerField(),
                 "city_id": serializers.IntegerField(),
+                "address": serializers.CharField(required=False),
                 "lon": serializers.DecimalField(
                     max_digits=9, decimal_places=6, required=False
                 ),
                 "lat": serializers.DecimalField(
                     max_digits=8, decimal_places=6, required=False
                 ),
-                "address": serializers.CharField(required=False),
             }
         )
         details = inline_serializer(
@@ -49,7 +47,7 @@ class CreateCaseApi(APIView):
 
 
 class UpdateCaseApi(APIView):
-    permission_classes = [permissions.AllowAny]
+    # TODO Add permissions
 
     class InputSerializer(serializers.Serializer):
         photos_urls = serializers.ListField(
@@ -66,5 +64,38 @@ class UpdateCaseApi(APIView):
                     max_digits=8, decimal_places=6, required=False
                 ),
                 "address": serializers.CharField(required=False),
+            }
+        )
+
+
+class DetailsCaseApi(APIView):
+    class OutputSerializer(serializers.Serializer):
+        user = serializers.IntegerField()
+        type = serializers.CharField()
+        state = serializers.CharField(source="get_state_display")
+        photos_urls = serializers.ListField(child=serializers.URLField())
+        location = inline_serializer(
+            fields={
+                "gov_id": serializers.IntegerField(),
+                "city_id": serializers.IntegerField(),
+                "address": serializers.CharField(),
+                "lon": serializers.DecimalField(
+                    max_digits=9,
+                    decimal_places=6,
+                ),
+                "lat": serializers.DecimalField(
+                    max_digits=8,
+                    decimal_places=6,
+                ),
+            }
+        )
+        details = inline_serializer(
+            fields={
+                "name": serializers.CharField(),
+                "gender": serializers.CharField(),
+                "age": serializers.IntegerField(),
+                "last_seen": serializers.DateField(),
+                "description": serializers.CharField(),
+                "location": location,
             }
         )
