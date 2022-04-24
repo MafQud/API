@@ -19,7 +19,7 @@ urlpatterns = [
     path("app-users/", include("api.users.app_urls", namespace="app_users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("api/", include("apis.urls", namespace="api")),
+    path("api/", include("apis.urls", namespace="apis")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development
@@ -27,8 +27,6 @@ if settings.DEBUG:
 
 # API URLS
 urlpatterns += [
-    # API base url
-    path("api/", include("config.api_router")),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
