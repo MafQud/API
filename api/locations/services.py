@@ -1,9 +1,11 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
-from .models import City, Governorate, Location
-from .utils import read_json
+from api.common.services import model_update
+from api.locations.models import City, Governorate, Location
+from api.locations.utils import read_json
 
 apps_dir = settings.APPS_DIR
 
@@ -46,7 +48,7 @@ def create_location(
     lat: Optional[float] = None,
     address: Optional[str] = None,
     gov_id: int,
-    city_id: int
+    city_id: int,
 ) -> Location:
 
     gov = Governorate.objects.get(pk=gov_id)
@@ -57,3 +59,29 @@ def create_location(
     loc.save()
 
     return loc
+
+
+def update_location(
+    *,
+    location_id: int,
+    data: Dict,
+) -> Location:
+
+    fields = ["lon", "lat", "address", "gov", "city"]
+    location = get_object_or_404(Location, id=location_id)
+
+    city_id = data.get("city_id")
+    if city_id is not None and city_id != location.city.id:
+        city = get_object_or_404(City, city_id)
+        gov = get_object_or_404(Governorate, city.gov.id)
+
+        data["gov"] = gov
+        data["city"] = city
+
+    location, has_updated = model_update(
+        intance=location,
+        fields=fields,
+        data=data,
+    )
+
+    return location
