@@ -19,7 +19,7 @@ urlpatterns = [
     path("app-users/", include("api.users.app_urls", namespace="app_users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("api/", include("apis.urls", namespace="apis")),
+    path("api/", include("api.apis.urls", namespace="apis")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
     # Static file serving when using Gunicorn + Uvicorn for local web socket development

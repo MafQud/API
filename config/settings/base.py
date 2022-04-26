@@ -91,6 +91,7 @@ LOCAL_APPS = [
     "api.common",
     "api.files",
     "api.integrations",
+    "api.apis",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
