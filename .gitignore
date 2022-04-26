@@ -280,3 +280,6 @@ api/media/
 
 # VScode
 .vscode
+
+# Media files
+media

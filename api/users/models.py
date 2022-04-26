@@ -2,8 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
-from ..locations.models import Location
-from .validators import is_phone
+from api.locations.models import Location
+from api.users.validators import is_phone
 
 
 class User(AbstractUser):
@@ -15,7 +15,6 @@ class User(AbstractUser):
     username = models.CharField(max_length=10, unique=True, validators=[is_phone])
 
     id_exp_date = models.DateTimeField(null=True, blank=True)
-    id_photo_url = models.ImageField(upload_to="id-photos/", blank=True)
 
     firebase_token = models.CharField(max_length=256, unique=True, blank=True)
 
