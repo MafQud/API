@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 from api.locations.models import Location
@@ -29,7 +30,10 @@ class User(AbstractUser):
 
     @property
     def is_verified(self) -> bool:
-        return self.id_exp_date > timezone.now()
+        return self.id_exp_date and self.id_exp_date > timezone.now()
+
+    def get_absolute_url(self) -> str:
+        return reverse("apis:users:get_user", args=[str(self.id)])
 
     def renew_id(self, days: int = 365) -> None:
         self.id_exp_date = timezone.now() + timezone.timedelta(days=days)
