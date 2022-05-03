@@ -31,7 +31,7 @@ def create_case(
     photos_urls: List[str],
 ) -> Case:
     location: Location = create_location(**location)
-    case = Case(type=type, user=user, location=location)
+    case = Case(type=type.upper(), user=user, location=location)
 
     case.full_clean()
     case.save()

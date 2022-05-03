@@ -83,20 +83,22 @@ class CaseDetails(models.Model):
         FEMALE = "F", _("Female")
         UNKNOWN = "U", _("Unknown")
 
-    case = models.OneToOneField(Case, on_delete=models.CASCADE)
+    case = models.OneToOneField(Case, on_delete=models.CASCADE, related_name="details")
     name = models.CharField(max_length=128, null=True, blank=True)
     gender = models.CharField(max_length=1, choices=Gender.choices)
     age = models.SmallIntegerField(null=True, blank=True)
     location = models.OneToOneField(
         Location, on_delete=models.CASCADE, null=True, blank=True
     )
-    last_seen = models.DateTimeField(null=True, blank=True)
+    last_seen = models.DateField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
 
 class CaseMatch(models.Model):
-    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="matches")
-    match = models.ForeignKey(Case, on_delete=models.CASCADE)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="old_matches")
+    match = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="new_matches"
+    )
     score = models.SmallIntegerField(
         validators=[MaxValueValidator(100), MinValueValidator(1)]
     )
