@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from fcm_django.models import FCMDevice
 
 
 class Notification(models.Model):
@@ -12,7 +13,11 @@ class Notification(models.Model):
     level = models.CharField(max_length=1, choices=Level.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(default=None, null=True, blank=True)
-    # TODO : sent_to field
+    sent_to = models.ForeignKey(
+        to=FCMDevice,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
     # TODO : hyper_link field
 
     class Meta:

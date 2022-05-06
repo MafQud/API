@@ -28,3 +28,4 @@ drf-spectacular==0.22.0  # https://github.com/tfranzel/drf-spectacular
 django-fsm==2.8.0  # https://github.com/viewflow/django-fsm
 boto3==1.21.45  # https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 django-filter==21.1 # https://github.com/carltongibson/django-filter
+fcm-django==1.0.11 # https://pypi.org/project/fcm-django/1.0.11/
