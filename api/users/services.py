@@ -37,7 +37,7 @@ def create_user(
 
     if fcm_token:
         create_fcm_device(
-            user=User,
+            user=user,
             fcm_token=fcm_token,
         )
 
