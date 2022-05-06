@@ -10,6 +10,8 @@ class Notification(models.Model):
         WARNING = "W", _("WARNING")
         ERROR = "E", _("ERROR")
 
+    body = models.TextField()
+    title = models.CharField(max_length=255)
     level = models.CharField(max_length=1, choices=Level.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(default=None, null=True, blank=True)
