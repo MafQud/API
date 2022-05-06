@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from api.common.services import model_update
 from api.locations.models import Location
 from api.locations.services import create_location, update_location
+from api.notifications.services import create_fcm_device
 from api.users.models import User
 
 
@@ -16,6 +17,7 @@ def create_user(
     username: str,
     password: str,
     email: Optional[str] = None,
+    fcm_token: Optional[str],
     firebase_token: Optional[str],
     gov_id: int,
     city_id: int,
@@ -31,8 +33,13 @@ def create_user(
     )
     user.set_password(password)
     user.full_clean()
-    # user.clean()
     user.save()
+
+    if fcm_token:
+        create_fcm_device(
+            user=User,
+            fcm_token=fcm_token,
+        )
 
     return user
 
