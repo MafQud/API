@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import environ
+from firebase_admin import initialize_app
 
 from api.files.enums import FileUploadStorage, FileUploadStrategy
 from config.env import env_to_enum
@@ -69,6 +70,7 @@ DJANGO_APPS = [
     "django.contrib.admin",
     "django.forms",
 ]
+
 THIRD_PARTY_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
@@ -80,6 +82,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "drf_spectacular",
+    "fcm_django",
 ]
 
 LOCAL_APPS = [
@@ -92,6 +95,7 @@ LOCAL_APPS = [
     "api.files",
     "api.integrations",
     "api.apis",
+    "api.notifications",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -342,6 +346,20 @@ SPECTACULAR_SETTINGS = {
         {"url": "https://mafqud.com", "description": "Production server"},
     ],
 }
+
+# Firebase Notification Settings
+# ------------------------------------------------------------------------------
+# fcm-django - https://fcm-django.readthedocs.io/en/latest/
+GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+
+FIREBASE_APP = initialize_app()
+
+FCM_DJANGO_SETTINGS = {
+    "ONE_DEVICE_PER_USER": True,
+    "DELETE_INACTIVE_DEVICES": False,
+    "UPDATE_ON_DUPLICATE_REG_ID": True,
+}
+
 # File Storages Settings
 # ------------------------------------------------------------------------------
 FILE_UPLOAD_STRATEGY = env_to_enum(

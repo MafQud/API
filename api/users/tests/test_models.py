@@ -15,6 +15,7 @@ class UserTests(TestCase):
             password="hardpassword",
             email="osamayasserr@gmail.com",
             firebase_token="token",
+            fcm_token="fcm_token",
             gov_id="1",
             city_id="4",
         )
