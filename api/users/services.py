@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
@@ -16,7 +16,7 @@ def create_user(
     name: str,
     username: str,
     password: str,
-    firebase_token: Optional[str],
+    firebase_token: str,
     location: Dict,
 ) -> User:
 
