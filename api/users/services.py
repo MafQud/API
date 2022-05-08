@@ -17,7 +17,7 @@ def create_user(
     username: str,
     password: str,
     email: Optional[str] = None,
-    fcm_token: Optional[str],
+    fcm_token: str,
     firebase_token: Optional[str],
     gov_id: int,
     city_id: int,
@@ -35,11 +35,7 @@ def create_user(
     user.full_clean()
     user.save()
 
-    if fcm_token:
-        create_fcm_device(
-            user=user,
-            fcm_token=fcm_token,
-        )
+    create_fcm_device(user=user, fcm_token=fcm_token)
 
     return user
 
