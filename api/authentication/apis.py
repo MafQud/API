@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.authentication.selectors import validate_email, validate_phone
-from api.users.validators import is_phone
+from api.common.validators import is_phone
 
 
 class ValidatePhoneAPI(APIView):
