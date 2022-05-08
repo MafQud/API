@@ -7,6 +7,7 @@ from django.db import transaction
 from api.common.services import model_update
 from api.locations.models import Location
 from api.locations.services import create_location, update_location
+from api.notifications.services import create_fcm_device
 from api.users.models import User
 
 
@@ -18,6 +19,7 @@ def create_user(
     password: str,
     firebase_token: str,
     location: Dict,
+    fcm_token: str,
 ) -> User:
 
     # Creating user's related entities
@@ -37,6 +39,8 @@ def create_user(
 
     # Saving user to the database
     user.save()
+
+    create_fcm_device(user=user, fcm_token=fcm_token)
 
     return user
 

@@ -21,6 +21,7 @@ class CreateUserApi(APIView):
                 "city": serializers.IntegerField(),
             }
         )
+        fcm_token = serializers.CharField()
         firebase_token = serializers.CharField()
 
     def post(self, request):
