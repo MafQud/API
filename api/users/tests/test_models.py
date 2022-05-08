@@ -13,10 +13,8 @@ class UserTests(TestCase):
             name="Osama Yasser",
             username="1005499972",
             password="hardpassword",
-            email="osamayasserr@gmail.com",
             firebase_token="token",
-            gov_id="1",
-            city_id="4",
+            location={"gov": 1, "city": "4"},
         )
 
     def test_name_max_lenght(self):
