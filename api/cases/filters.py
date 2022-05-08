@@ -26,4 +26,10 @@ class CaseFilter(django_filters.FilterSet):
 
     class Meta:
         model = Case
-        fields = ["type", "details__age", "details__last_seen", "location__gov", "name"]
+        fields = [
+            "type",
+            "details__age",
+            "details__last_seen",
+            "location__gov",
+            "details__name",
+        ]

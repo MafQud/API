@@ -2,7 +2,6 @@ from typing import Dict, Optional
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
 
 from api.common.services import model_update
 from api.locations.models import City, Governorate, Location
@@ -48,44 +47,45 @@ def create_location(
     lon: Optional[float] = None,
     lat: Optional[float] = None,
     address: Optional[str] = None,
-    gov_id: int,
-    city_id: int,
+    gov: int,
+    city: int,
 ) -> Location:
 
-    gov = Governorate.objects.get(pk=gov_id)
-    city = City.objects.get(pk=city_id)
-    loc = Location(lon=lon, lat=lat, address=address, gov=gov, city=city)
-    loc.full_clean()
-    # loc.clean()
-    loc.save()
+    # Fetch Governorate & City
+    gov = Governorate.objects.get(pk=gov)
+    city = City.objects.get(pk=city)
 
-    return loc
+    # Pack location data for validation
+    location = Location(lon=lon, lat=lat, address=address, gov=gov, city=city)
+
+    # Data validation
+    location.full_clean()
+
+    # Save location instance to the database
+    location.save()
+
+    return location
 
 
 def update_location(
     *,
-    location_id: int,
+    location: Location,
     data: Dict,
 ) -> Location:
 
-    fields = ["lon", "lat", "address", "gov", "city"]
-    location = get_object_or_404(Location, pk=location_id)
+    # Fetch Governorate & City if given
+    gov_id, city_id = data.get("gov"), data.get("city")
 
-    gov_id = data.get("gov_id")
-    city_id = data.get("city_id")
+    if gov_id:
+        data["gov"] = get_object_or_404(Governorate, pk=gov_id)
+    if city_id:
+        data["city"] = get_object_or_404(City, pk=city_id)
 
-    gov = get_object_or_404(Governorate, pk=gov_id)
-    city = get_object_or_404(City, pk=city_id)
-
-    if city.gov != gov:
-        raise ValidationError("City does not belong to Governorate")
-
-    data["gov"] = gov
-    data["city"] = city
+    non_side_effect_fields = ["lon", "lat", "address", "gov", "city"]
 
     location, _ = model_update(
         instance=location,
-        fields=fields,
+        fields=non_side_effect_fields,
         data=data,
     )
 

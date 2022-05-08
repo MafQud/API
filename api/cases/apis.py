@@ -15,8 +15,8 @@ class CreateCaseApi(APIView):
         photos_urls = serializers.ListField(child=serializers.URLField())
         location = inline_serializer(
             fields={
-                "gov_id": serializers.IntegerField(),
-                "city_id": serializers.IntegerField(),
+                "gov": serializers.IntegerField(),
+                "city": serializers.IntegerField(),
                 "address": serializers.CharField(required=False),
                 "lon": serializers.DecimalField(
                     max_digits=9, decimal_places=6, required=False
@@ -65,11 +65,15 @@ class CaseListApi(APIView):
         id = serializers.IntegerField()
         type = serializers.CharField()
         name = serializers.CharField(source="details.name")
-        gov = serializers.CharField(source="location.gov.name_ar")
-        city = serializers.CharField(source="location.city.name_ar")
-        photo = serializers.URLField(source="photo_urls")
+        location = inline_serializer(
+            fields={
+                "gov": serializers.CharField(source="gov.name_ar"),
+                "city": serializers.CharField(source="city.name_ar"),
+            }
+        )
+        photos = serializers.ListField(source="photo_urls")
         last_seen = serializers.DateField(source="details.last_seen")
-        posted_at = serializers.DateField()
+        posted_at = serializers.DateTimeField()
 
     def get(self, request):
         # Make sure the filters are valid, if passed
@@ -92,11 +96,11 @@ class DetailsCaseApi(APIView):
         user = serializers.IntegerField()
         type = serializers.CharField()
         state = serializers.CharField(source="get_state_display")
-        photos_urls = serializers.ListField(child=serializers.URLField())
+        photos = serializers.ListField(source="photo_urls")
         location = inline_serializer(
             fields={
-                "gov_id": serializers.IntegerField(),
-                "city_id": serializers.IntegerField(),
+                "gov": serializers.CharField(),
+                "city": serializers.CharField(),
                 "address": serializers.CharField(),
                 "lon": serializers.DecimalField(
                     max_digits=9,
