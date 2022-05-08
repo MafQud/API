@@ -16,4 +16,8 @@ CELERY_FLOWER_PASSWORD=debug
 
 # Files
 # ------------------------------------------------------------------------------
-FILE_UPLOAD_STORAGE="local"
+FILE_UPLOAD_STORAGE=local
+
+# Firebase
+# ------------------------------------------------------------------------------
+GOOGLE_APPLICATION_CREDENTIALS=/home/$USER/google-services.json

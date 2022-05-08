@@ -3,9 +3,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
-from api.common.validators import is_national_id
+from api.common.validators import is_national_id, is_phone
 from api.locations.models import Location
-from api.users.validators import is_phone
 
 
 class User(AbstractUser):
