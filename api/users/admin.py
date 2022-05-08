@@ -10,14 +10,14 @@ User = get_user_model()
 
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
-    list_display = ("id", "name", "username", "id_exp_date", "location")
+    list_display = ("id", "name", "username", "id_exp_date", "location", "national_id")
     search_fields = ("name", "username")
 
     form = UserAdminChangeForm
     add_form = UserAdminCreationForm
     fieldsets = (
         (None, {"fields": ("username", "password")}),
-        (_("Personal info"), {"fields": ("name", "email", "location")}),
+        (_("Personal info"), {"fields": ("name", "email", "location", "national_id")}),
         (
             _("Permissions"),
             {

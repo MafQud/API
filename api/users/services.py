@@ -66,3 +66,13 @@ def update_user(
     )
 
     return user
+
+
+def set_national_id(*, user_id: int, national_id: str) -> User:
+    user = get_object_or_404(User, pk=user_id)
+    user.national_id = national_id
+
+    user.full_clean()
+    user.save()
+
+    return user

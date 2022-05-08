@@ -1,6 +1,6 @@
 from typing import Union
 
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 
 def is_national_id(val: str) -> Union[None, ValidationError]:

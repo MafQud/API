@@ -4,8 +4,9 @@ from rest_framework.views import APIView
 
 from api.common.permissions import IsVerified
 from api.common.utils import get_object, inline_serializer
+from api.common.validators import is_national_id
 from api.users.models import User
-from api.users.services import create_user, update_user
+from api.users.services import create_user, set_national_id, update_user
 
 
 class CreateUserApi(APIView):
@@ -74,5 +75,19 @@ class UpdateUserApi(APIView):
         update_user(
             user_id=user_id,
             data=serializer.validated_data,
+        )
+        return Response(status=status.HTTP_200_OK)
+
+
+class SetNationalIdApi(APIView):
+    class InputSerializer(serializers.Serializer):
+        national_id = serializers.CharField(validators=[is_national_id])
+
+    def post(self, request, user_id):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        set_national_id(
+            user_id=user_id,
+            national_id=serializer.validated_data["national_id"],
         )
         return Response(status=status.HTTP_200_OK)
