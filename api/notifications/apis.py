@@ -1,4 +1,4 @@
-from rest_framework import permissions, serializers
+from rest_framework import serializers
 from rest_framework.views import APIView
 
 from api.apis.pagination import LimitOffsetPagination, get_paginated_response
@@ -6,8 +6,6 @@ from api.notifications.selectors import list_notification
 
 
 class NotificationListApi(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
     class Pagination(LimitOffsetPagination):
         default_limit = 10
 
