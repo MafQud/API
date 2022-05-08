@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from api.authentication.apis import ValidateEmailAPI, ValidatePhoneAPI
+from api.authentication.apis import ValidatePhoneAPI
 
 app_name = "auth"
 urlpatterns = [
@@ -13,5 +13,4 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="refresh_token"),
     path("token/verify/", TokenVerifyView.as_view(), name="verify_token"),
     path("phone/validate/", ValidatePhoneAPI.as_view(), name="validate_phone"),
-    path("email/validate/", ValidateEmailAPI.as_view(), name="validate_email"),
 ]

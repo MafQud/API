@@ -10,10 +10,3 @@ def validate_phone(*, phone: str) -> Union[None, ValidationError]:
         raise ValidationError(f"Phone number: {phone} already taken")
 
     return None
-
-
-def validate_email(*, email: str) -> Union[None, ValidationError]:
-    if User.objects.filter(email=email).exists():
-        raise ValidationError(f"Email: {email} already taken")
-
-    return None
