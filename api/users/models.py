@@ -12,7 +12,6 @@ class User(AbstractUser):
     last_name = None  # type: ignore
 
     name = models.CharField(max_length=256)
-    email = models.EmailField(null=True, blank=True)
     username = models.CharField(max_length=10, unique=True, validators=[is_phone])
 
     id_exp_date = models.DateTimeField(null=True, blank=True)

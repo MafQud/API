@@ -15,9 +15,12 @@ class CreateUserApi(APIView):
         username = serializers.CharField()
         password = serializers.CharField()
         name = serializers.CharField()
-        email = serializers.EmailField(required=False)
-        gov_id = serializers.IntegerField()
-        city_id = serializers.IntegerField()
+        location = inline_serializer(
+            fields={
+                "gov": serializers.IntegerField(),
+                "city": serializers.IntegerField(),
+            }
+        )
         firebase_token = serializers.CharField()
 
     def post(self, request):
@@ -34,22 +37,11 @@ class DetailUserApi(APIView):
     class OutputSerializer(serializers.Serializer):
         username = serializers.CharField()
         name = serializers.CharField()
-        email = serializers.CharField()
         location = inline_serializer(
             fields={
                 "address": serializers.CharField(),
-                "gov": inline_serializer(
-                    fields={
-                        "name_ar": serializers.CharField(),
-                        "name_en": serializers.CharField(),
-                    }
-                ),
-                "city": inline_serializer(
-                    fields={
-                        "name_ar": serializers.CharField(),
-                        "name_en": serializers.CharField(),
-                    }
-                ),
+                "gov": serializers.CharField(source="gov.name_ar"),
+                "city": serializers.CharField(source="city.name_ar"),
             }
         )
 
@@ -64,9 +56,20 @@ class UpdateUserApi(APIView):
 
     class InputSerializer(serializers.Serializer):
         name = serializers.CharField(required=False)
-        email = serializers.CharField(required=False)
-        gov_id = serializers.IntegerField(required=False)
-        city_id = serializers.IntegerField(required=False)
+        location = inline_serializer(
+            fields={
+                "gov": serializers.IntegerField(),
+                "city": serializers.IntegerField(),
+                "address": serializers.CharField(required=False),
+                "lon": serializers.DecimalField(
+                    max_digits=9, decimal_places=6, required=False
+                ),
+                "lat": serializers.DecimalField(
+                    max_digits=8, decimal_places=6, required=False
+                ),
+            },
+            required=False,
+        )
 
     def post(self, request, user_id):
         serializer = self.InputSerializer(data=request.data)

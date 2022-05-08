@@ -1,7 +1,8 @@
 from typing import Dict, Optional
 
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 
 from api.common.services import model_update
 from api.locations.models import Location
@@ -15,23 +16,26 @@ def create_user(
     name: str,
     username: str,
     password: str,
-    email: Optional[str] = None,
     firebase_token: Optional[str],
-    gov_id: int,
-    city_id: int,
+    location: Dict,
 ) -> User:
 
-    loc: Location = create_location(gov_id=gov_id, city_id=city_id)
+    # Creating user's related entities
+    location: Location = create_location(**location)
+
+    # Pack user data for validation
     user: User = User(
-        name=name,
-        username=username,
-        email=email,
-        location=loc,
-        firebase_token=firebase_token,
+        name=name, username=username, firebase_token=firebase_token, location=location
     )
-    user.set_password(password)
+
+    # Password validation
+    validate_password(password)
+    user.password = make_password(password)
+
+    # Data validation
     user.full_clean()
-    # user.clean()
+
+    # Saving user to the database
     user.save()
 
     return user
@@ -40,29 +44,19 @@ def create_user(
 @transaction.atomic
 def update_user(
     *,
-    user_id: int,
+    user: User,
     data: Dict,
 ) -> User:
-    fields = ["name", "email"]
-
-    user = get_object_or_404(User, pk=user_id)
-
-    gov_id = data.get("gov_id")
-    city_id = data.get("city_id")
-
-    if gov_id and city_id:
-        update_location(
-            location_id=user.location.id,
-            data={
-                "gov_id": data.get("gov_id"),
-                "city_id": data.get("city_id"),
-            },
-        )
+    non_side_effect_fields = ["name", "firebase_token"]
 
     user, _ = model_update(
         instance=user,
-        fields=fields,
+        fields=non_side_effect_fields,
         data=data,
     )
+
+    location_data = data.get("location")
+    if location_data:
+        update_location(location=user.location, data=location_data)
 
     return user
