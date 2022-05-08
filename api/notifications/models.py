@@ -21,7 +21,7 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
         related_name="notifications",
     )
-    # TODO : hyper_link field
+    hyper_link = models.URLField(null=True, blank=True)
 
     class Meta:
         db_table = "notifications"
@@ -29,4 +29,4 @@ class Notification(models.Model):
         verbose_name_plural = "notifications"
 
     def __str__(self) -> str:
-        return f"<Notification({self.level}): {self.id}"
+        return f"<Notification({self.level}): {self.id}>"
