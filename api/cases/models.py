@@ -96,9 +96,11 @@ class CaseDetails(models.Model):
 
 
 class CaseMatch(models.Model):
-    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="old_matches")
-    match = models.ForeignKey(
-        Case, on_delete=models.CASCADE, related_name="new_matches"
+    missing = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="missing_matches"
+    )
+    found = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="found_matches"
     )
     score = models.SmallIntegerField(
         validators=[MaxValueValidator(100), MinValueValidator(1)]

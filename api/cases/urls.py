@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .apis import CaseListApi, CreateCaseApi, DetailsCaseApi
+from .apis import CaseListApi, CaseMatchListApi, CreateCaseApi, DetailsCaseApi
 
 app_name = "cases"
 
@@ -9,4 +9,5 @@ urlpatterns = [
     path("<int:case_id>/", DetailsCaseApi.as_view(), name="detail"),
     path("create/", CreateCaseApi.as_view(), name="create"),
     # path("<int:case_id>/update/", UpdateCaseApi.as_view(), name="update"),
+    path("<int:case_id>/matches/", CaseMatchListApi.as_view(), name="matches"),
 ]

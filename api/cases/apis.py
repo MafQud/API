@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.apis.pagination import LimitOffsetPagination, get_paginated_response
-from api.cases.selectors import get_case, list_case
+from api.cases.models import Case
+from api.cases.selectors import get_case, list_case, list_case_match
 from api.cases.services import create_case
 from api.common.utils import inline_serializer
 from api.users.models import User
@@ -127,5 +128,44 @@ class DetailsCaseApi(APIView):
         case = get_case(pk=case_id, fetched_by=request.user)
 
         serializer = self.OutputSerializer(case)
+
+        return Response(serializer.data)
+
+
+class CaseMatchListApi(APIView):
+    def get(self, request, case_id):
+
+        # Fetching our case
+        case = get_case(pk=case_id, fetched_by=request.user)
+
+        # Selecting which cases to serialize depding on case type
+        case_source = "missing" if case.type == Case.Types.FOUND else "found"
+
+        # Writing our serializer here because of case source decision
+        class OutputSerializer(serializers.Serializer):
+            case = inline_serializer(
+                fields={
+                    "id": serializers.IntegerField(),
+                    "type": serializers.CharField(),
+                    "name": serializers.CharField(source="details.name"),
+                    "location": inline_serializer(
+                        fields={
+                            "gov": serializers.CharField(source="gov.name_ar"),
+                            "city": serializers.CharField(source="city.name_ar"),
+                        },
+                    ),
+                    "photos": serializers.ListField(source="photo_urls"),
+                    "last_seen": serializers.DateField(source="details.last_seen"),
+                    "posted_at": serializers.DateTimeField(),
+                },
+                source=case_source,
+            )
+            score = serializers.IntegerField()
+
+        # Listing all case matches
+        matches = list_case_match(case=case)
+
+        # Serializing the results
+        serializer = OutputSerializer(matches, many=True)
 
         return Response(serializer.data)
