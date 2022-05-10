@@ -1,5 +1,5 @@
 from django.core.exceptions import PermissionDenied
-from django.db.models.query import Q, QuerySet
+from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 
 from api.users.models import User
@@ -30,12 +30,17 @@ def list_user_case(*, user: User):
     return user.cases.all()
 
 
-def list_case_match(*, pk: int, fetched_by: User) -> QuerySet[Case]:
-    case = get_object_or_404(Case, pk=pk)
+def list_case_match(*, case: Case, fetched_by: User) -> QuerySet[CaseMatch]:
 
-    if fetched_by != case.user:
+    if case.user != fetched_by:
         raise PermissionDenied()
 
-    # TODO Wrong approach
-    qs = CaseMatch.objects.filter(Q(case=case) | Q(match=case))
+    qs = []
+
+    if case.type == Case.Types.FOUND:
+        qs = case.found_matches.all()
+
+    elif case.type == Case.Types.MISSING:
+        qs = case.missing_matches.all()
+
     return qs
