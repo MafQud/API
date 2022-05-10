@@ -1,11 +1,12 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.common.permissions import IsVerified
-from api.common.utils import get_object, inline_serializer
+from api.common.utils import inline_serializer
 from api.users.models import User
-from api.users.services import create_user, update_user
+from api.users.services import create_user, set_national_id, update_user
 
 
 class CreateUserApi(APIView):
@@ -47,7 +48,7 @@ class DetailUserApi(APIView):
         )
 
     def get(self, request, user_id):
-        user = get_object(User, id=user_id)
+        user = get_object_or_404(User, id=user_id)
         serializer = self.OutputSerializer(user)
         return Response(serializer.data)
 
@@ -79,4 +80,21 @@ class UpdateUserApi(APIView):
             user_id=user_id,
             data=serializer.validated_data,
         )
+        return Response(status=status.HTTP_200_OK)
+
+
+class SetNationalIdApi(APIView):
+    class InputSerializer(serializers.Serializer):
+        national_id = serializers.CharField()
+
+    def post(self, request, user_id):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = get_object_or_404(User, pk=user_id)
+        set_national_id(
+            user=user,
+            data=serializer.validated_data,
+        )
+
         return Response(status=status.HTTP_200_OK)

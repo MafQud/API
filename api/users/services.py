@@ -46,11 +46,7 @@ def create_user(
 
 
 @transaction.atomic
-def update_user(
-    *,
-    user: User,
-    data: Dict,
-) -> User:
+def update_user(*, user: User, data: Dict) -> User:
     non_side_effect_fields = ["name", "firebase_token"]
 
     user, _ = model_update(
@@ -64,3 +60,13 @@ def update_user(
         update_location(location=user.location, data=location_data)
 
     return user
+
+
+def set_national_id(*, user: User, data: Dict) -> None:
+    national_id = data.get("national_id")
+    user.national_id = national_id
+
+    user.full_clean()
+    user.save()
+
+    return None
