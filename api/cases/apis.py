@@ -163,7 +163,7 @@ class CaseMatchListApi(APIView):
             score = serializers.IntegerField()
 
         # Listing all case matches
-        matches = list_case_match(case=case)
+        matches = list_case_match(case=case, user=request.user)
 
         # Serializing the results
         serializer = OutputSerializer(matches, many=True)
