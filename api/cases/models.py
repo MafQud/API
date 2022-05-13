@@ -38,7 +38,7 @@ class Case(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     posted_at = models.DateTimeField(null=True, default=None, blank=True)
     is_active = models.BooleanField(default=False, editable=False)
-    # TODO thumbnail
+    thumbnail = models.URLField()
 
     @property
     def photo_urls(self):
@@ -50,10 +50,6 @@ class Case(models.Model):
     # Pass the case to the model then add matched cases if any.
     @transition(field=state, source=States.PENDING, target=States.ACTIVE)
     def activate(self):
-        from .services import case_matching_binding, process_case
-
-        matches = process_case(self)
-        case_matching_binding(matches)
         self.is_active = True
 
     # If User selected one of the matches to be the correct one
@@ -73,7 +69,6 @@ class Case(models.Model):
     def activate_again(self):
         self.is_active = True
 
-    # FIXME
     def publish(self):
         self.posted_at = timezone.now()
 

@@ -11,7 +11,7 @@ def create_notification(
     title: str,
     body: str,
     level: str,
-    sent_to: FCMDevice,
+    sent_to: User,
 ) -> Notification:
 
     notification = Notification(
