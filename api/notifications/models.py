@@ -27,6 +27,7 @@ class Notification(models.Model):
         db_table = "notifications"
         verbose_name = "notification"
         verbose_name_plural = "notifications"
+        ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return f"<Notification({self.level}): {self.id}>"
