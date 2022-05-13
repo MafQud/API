@@ -5,14 +5,14 @@ from rest_framework.views import APIView
 from api.apis.pagination import LimitOffsetPagination, get_paginated_response
 from api.cases.models import Case
 from api.cases.selectors import get_case, list_case, list_case_match
-from api.cases.services import create_case
+from api.cases.services import create_case, publish_case
 from api.common.utils import inline_serializer
-from api.users.models import User
 
 
 class CreateCaseApi(APIView):
     class InputSerializer(serializers.Serializer):
         type = serializers.CharField()
+        thumbnail = serializers.URLField()
         photos_urls = serializers.ListField(child=serializers.URLField())
         location = inline_serializer(
             fields={
@@ -44,7 +44,7 @@ class CreateCaseApi(APIView):
     def post(self, request):
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        create_case(user=User.objects.all()[0], **serializer.validated_data)
+        create_case(user=request.user, **serializer.validated_data)
 
         return Response(status=status.HTTP_201_CREATED)
 
@@ -66,15 +66,15 @@ class CaseListApi(APIView):
         id = serializers.IntegerField()
         type = serializers.CharField()
         name = serializers.CharField(source="details.name")
+        thumbnail = serializers.URLField()
+        last_seen = serializers.DateField(source="details.last_seen")
+        posted_at = serializers.DateTimeField()
         location = inline_serializer(
             fields={
                 "gov": serializers.CharField(source="gov.name_ar"),
                 "city": serializers.CharField(source="city.name_ar"),
             }
         )
-        photos = serializers.ListField(source="photo_urls")
-        last_seen = serializers.DateField(source="details.last_seen")
-        posted_at = serializers.DateTimeField()
 
     def get(self, request):
         # Make sure the filters are valid, if passed
@@ -94,7 +94,7 @@ class CaseListApi(APIView):
 
 class DetailsCaseApi(APIView):
     class OutputSerializer(serializers.Serializer):
-        user = serializers.IntegerField()
+        user = serializers.CharField(source="user.username")
         type = serializers.CharField()
         state = serializers.CharField(source="get_state_display")
         photos = serializers.ListField(source="photo_urls")
@@ -138,7 +138,7 @@ class CaseMatchListApi(APIView):
         # Fetching our case
         case = get_case(pk=case_id, fetched_by=request.user)
 
-        # Selecting which cases to serialize depding on case type
+        # Selecting which cases to serialize depending on case type
         case_source = "missing" if case.type == Case.Types.FOUND else "found"
 
         # Writing our serializer here because of case source decision
@@ -169,3 +169,10 @@ class CaseMatchListApi(APIView):
         serializer = OutputSerializer(matches, many=True)
 
         return Response(serializer.data)
+
+
+class CasePublishApi(APIView):
+    def get(self, request, case_id):
+        case = get_case(case_id)
+        publish_case(case=case, performed_by=request.user)
+        return Response(status=status.HTTP_200_OK)
