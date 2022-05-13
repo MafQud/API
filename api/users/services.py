@@ -2,6 +2,7 @@ from typing import Dict
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
 from api.common.services import model_update
@@ -49,8 +50,13 @@ def create_user(
 def update_user(
     *,
     user: User,
+    performed_by: User,
     data: Dict,
 ) -> User:
+
+    if user != performed_by:
+        raise PermissionDenied()
+
     non_side_effect_fields = ["name", "firebase_token"]
 
     user, _ = model_update(
