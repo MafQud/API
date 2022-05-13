@@ -3,7 +3,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
-from api.common.validators import is_phone
+from api.common.validators import is_national_id, is_phone
 from api.locations.models import Location
 
 
@@ -15,6 +15,13 @@ class User(AbstractUser):
     username = models.CharField(max_length=10, unique=True, validators=[is_phone])
 
     id_exp_date = models.DateTimeField(null=True, blank=True)
+    national_id = models.CharField(
+        max_length=14,
+        unique=True,
+        null=True,
+        blank=True,
+        validators=[is_national_id],
+    )
 
     firebase_token = models.CharField(max_length=256, unique=True, blank=True)
 

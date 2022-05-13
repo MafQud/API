@@ -1,6 +1,12 @@
 from django.urls import path
 
-from api.users.apis import CreateUserApi, DetailUserApi, UpdateUserApi, UserCasesListApi
+from api.users.apis import (
+    CreateUserApi,
+    DetailUserApi,
+    SetNationalIdApi,
+    UpdateUserApi,
+    UserCasesListApi,
+)
 
 app_name = "users"
 urlpatterns = [
@@ -8,4 +14,5 @@ urlpatterns = [
     path("<int:user_id>/", DetailUserApi.as_view(), name="get_user"),
     path("<int:user_id>/update/", UpdateUserApi.as_view(), name="update_user"),
     path("cases/", UserCasesListApi.as_view(), name="get_user_cases"),
+    path("<int:user_id>/set/id/", SetNationalIdApi.as_view(), name="set_id"),
 ]
