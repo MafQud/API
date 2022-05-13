@@ -173,6 +173,6 @@ class CaseMatchListApi(APIView):
 
 class CasePublishApi(APIView):
     def get(self, request, case_id):
-        case = get_case(case_id)
+        case = get_case(pk=case_id, fetched_by=request.user)
         publish_case(case=case, performed_by=request.user)
         return Response(status=status.HTTP_200_OK)
