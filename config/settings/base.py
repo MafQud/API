@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import environ
-from firebase_admin import initialize_app
+import firebase_admin
 
 from api.files.enums import FileUploadStorage, FileUploadStrategy
 from config.env import env_to_enum
@@ -343,7 +343,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     "SERVERS": [
         {"url": "http://127.0.0.1:8000", "description": "Local Development server"},
-        {"url": "https://mafqud.com", "description": "Production server"},
+        {
+            "url": "ec2-15-160-246-194.eu-south-1.compute.amazonaws.com",
+            "description": "Production server",
+        },
     ],
 }
 
@@ -352,7 +355,10 @@ SPECTACULAR_SETTINGS = {
 # fcm-django - https://fcm-django.readthedocs.io/en/latest/
 GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
 
-FIREBASE_APP = initialize_app()
+if not firebase_admin._apps:
+    firebase_admin.initialize_app()
+
+FIREBASE_APP = firebase_admin.get_app(name="[DEFAULT]")
 
 FCM_DJANGO_SETTINGS = {
     "ONE_DEVICE_PER_USER": True,
