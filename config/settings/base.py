@@ -1,9 +1,14 @@
 """
 Base settings to build other settings files upon.
 """
+import os
 from pathlib import Path
 
 import environ
+from firebase_admin import initialize_app
+
+from api.files.enums import FileUploadStorage, FileUploadStrategy
+from config.env import env_to_enum
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # api/
@@ -65,6 +70,7 @@ DJANGO_APPS = [
     "django.contrib.admin",
     "django.forms",
 ]
+
 THIRD_PARTY_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
@@ -76,11 +82,20 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     "drf_spectacular",
+    "fcm_django",
 ]
 
 LOCAL_APPS = [
     "api.users",
-    # Your stuff: custom apps go here
+    "api.authentication",
+    "api.locations",
+    "api.cases",
+    "api.errors",
+    "api.common",
+    "api.files",
+    "api.integrations",
+    "api.apis",
+    "api.notifications",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -286,7 +301,7 @@ ACCOUNT_AUTHENTICATION_METHOD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_REQUIRED = True
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "api.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/forms.html
@@ -303,10 +318,18 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "api.errors.handlers.custom_exception_handler",
 }
+
+# JWT config
+REST_USE_JWT = True
+JWT_AUTH_COOKIE = "my-app-auth"
+
+APP_DOMAIN = env("APP_DOMAIN", default="http://localhost:8000")
 
 # django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
 CORS_URLS_REGEX = r"^/api/.*$"
@@ -323,5 +346,51 @@ SPECTACULAR_SETTINGS = {
         {"url": "https://mafqud.com", "description": "Production server"},
     ],
 }
-# Your stuff...
+
+# Firebase Notification Settings
 # ------------------------------------------------------------------------------
+# fcm-django - https://fcm-django.readthedocs.io/en/latest/
+GOOGLE_APPLICATION_CREDENTIALS = env("GOOGLE_APPLICATION_CREDENTIALS")
+
+FIREBASE_APP = initialize_app()
+
+FCM_DJANGO_SETTINGS = {
+    "ONE_DEVICE_PER_USER": True,
+    "DELETE_INACTIVE_DEVICES": False,
+    "UPDATE_ON_DUPLICATE_REG_ID": True,
+}
+
+# File Storages Settings
+# ------------------------------------------------------------------------------
+FILE_UPLOAD_STRATEGY = env_to_enum(
+    FileUploadStrategy,
+    env("FILE_UPLOAD_STRATEGY", default="standard"),
+)
+
+FILE_UPLOAD_STORAGE = env_to_enum(
+    FileUploadStorage,
+    env("FILE_UPLOAD_STORAGE", default="local"),
+)
+
+FILE_MAX_SIZE = env.int("FILE_MAX_SIZE", default=10485760)  # 10 MB
+
+if FILE_UPLOAD_STORAGE == FileUploadStorage.LOCAL:
+    MEDIA_ROOT_NAME = "media"
+    MEDIA_ROOT = os.path.join(ROOT_DIR, MEDIA_ROOT_NAME)
+    MEDIA_URL = f"/{MEDIA_ROOT_NAME}/"
+
+if FILE_UPLOAD_STORAGE == FileUploadStorage.S3:
+    # Using django-storages
+    # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+    AWS_S3_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID")
+    AWS_S3_SECRET_ACCESS_KEY = env("AWS_S3_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME")
+    AWS_S3_SIGNATURE_VERSION = env("AWS_S3_SIGNATURE_VERSION", default="s3v4")
+
+    # https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
+    AWS_DEFAULT_ACL = env("AWS_DEFAULT_ACL", default="public-read")
+
+    AWS_PRESIGNED_EXPIRY = env.int("AWS_PRESIGNED_EXPIRY", default=10)  # seconds

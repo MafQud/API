@@ -1,9 +1,47 @@
-import pytest
+from django.test import TestCase
 
+from api.locations.services import populate_govs
 from api.users.models import User
+from api.users.services import create_user
 
-pytestmark = pytest.mark.django_db
 
+class UserTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):  # Called once at the beginning of the test run
+        populate_govs()
+        create_user(
+            name="Osama Yasser",
+            username="1005499972",
+            password="hardpassword",
+            firebase_token="token",
+            location={"gov": 1, "city": "4"},
+            fcm_token="fcm_token",
+        )
 
-def test_user_get_absolute_url(user: User):
-    assert user.get_absolute_url() == f"/users/{user.username}/"
+    def test_name_max_lenght(self):
+        user = User.objects.get(id=1)
+        max_length = user._meta.get_field("name").max_length
+        self.assertEqual(max_length, 256)
+
+    def test_get_absolute_url(self):
+        user = User.objects.get(id=1)
+        self.assertEqual(user.get_absolute_url(), "/api/users/1/")
+
+    def test_object_name_is_username(self):
+        user = User.objects.get(id=1)
+        expected_name = user.username
+        self.assertEqual(str(user), expected_name)
+
+    def test_user_is_not_verified(self):
+        user = User.objects.get(id=1)
+        self.assertFalse(user.is_verified)
+
+    def test_user_renew_id_one_year(self):
+        user = User.objects.get(id=1)
+        user.renew_id(days=365)
+        self.assertTrue(user.is_verified)
+
+    def test_user_renew_id_zero_days(self):
+        user = User.objects.get(id=1)
+        user.renew_id(days=0)
+        self.assertFalse(user.is_verified)
