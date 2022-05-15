@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 
+from api.files.models import File
+
 from ..locations.models import Location
 from ..users.models import User
 
@@ -38,11 +40,11 @@ class Case(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     posted_at = models.DateTimeField(null=True, default=None, blank=True)
     is_active = models.BooleanField(default=False, editable=False)
-    thumbnail = models.URLField()
+    thumbnail = models.OneToOneField(File, on_delete=models.CASCADE)
 
     @property
     def photo_urls(self):
-        return self.photos.values_list("url", flat=True)
+        return [photo.file.url for photo in self.photos.all()]
 
     def __str__(self):
         return f"{self.state} case {self.type}"
@@ -103,5 +105,5 @@ class CaseMatch(models.Model):
 
 
 class CasePhoto(models.Model):
-    url = models.URLField()
+    file = models.OneToOneField(File, on_delete=models.CASCADE)
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="photos")

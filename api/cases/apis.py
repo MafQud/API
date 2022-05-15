@@ -12,8 +12,8 @@ from api.common.utils import inline_serializer
 class CreateCaseApi(APIView):
     class InputSerializer(serializers.Serializer):
         type = serializers.CharField()
-        thumbnail = serializers.URLField()
-        photos_urls = serializers.ListField(child=serializers.URLField())
+        thumbnail = serializers.IntegerField()
+        file_ids = serializers.ListField(child=serializers.IntegerField())
         location = inline_serializer(
             fields={
                 "gov": serializers.IntegerField(),
@@ -66,7 +66,7 @@ class CaseListApi(APIView):
         id = serializers.IntegerField()
         type = serializers.CharField()
         name = serializers.CharField(source="details.name")
-        thumbnail = serializers.URLField()
+        thumbnail = serializers.URLField(source="thumbnail.url")
         last_seen = serializers.DateField(source="details.last_seen")
         posted_at = serializers.DateTimeField()
         location = inline_serializer(
@@ -154,7 +154,7 @@ class CaseMatchListApi(APIView):
                             "city": serializers.CharField(source="city.name_ar"),
                         },
                     ),
-                    "photos": serializers.ListField(source="photo_urls"),
+                    "thumbnail": serializers.URLField(source="thumbnail.url"),
                     "last_seen": serializers.DateField(source="details.last_seen"),
                     "posted_at": serializers.DateTimeField(),
                 },

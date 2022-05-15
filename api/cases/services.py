@@ -5,6 +5,8 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
+from api.common.utils import get_object
+from api.files.models import File
 from api.locations.models import Location
 from api.locations.services import create_location
 from api.notifications.models import Notification
@@ -21,8 +23,8 @@ Gender = CaseDetails.Gender
 CaseType = Case.Types
 
 
-def create_case_photo(*, case: Case, url: str) -> CasePhoto:
-    photo = CasePhoto(case=case, url=url)
+def create_case_photo(*, case: Case, file: File) -> CasePhoto:
+    photo = CasePhoto(case=case, file=file)
     photo.full_clean()
     photo.save()
 
@@ -36,17 +38,29 @@ def create_case(
     user: User,
     location: Dict,
     details: Dict,
-    thumbnail: str,
-    photos_urls: List[str],
+    thumbnail: id,
+    file_ids: List[int],
 ) -> Case:
+
+    # Fetch & create case related objects
     location: Location = create_location(**location)
+    thumbnail = get_object(File, pk=thumbnail)
+
+    if not thumbnail:
+        raise ValidationError("Invalid Thumbnail file id")
+
     case = Case(type=type.upper(), user=user, location=location, thumbnail=thumbnail)
 
     case.full_clean()
     case.save()
 
-    for url in photos_urls:
-        create_case_photo(case=case, url=url)
+    files = File.objects.filter(id__in=file_ids)
+
+    if not files:
+        raise ValidationError("Invalid files ids")
+
+    for file in files:
+        create_case_photo(case=case, file=file)
 
     create_case_details(case=case, **details)
 
