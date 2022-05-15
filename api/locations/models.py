@@ -1,0 +1,52 @@
+from django.db import models
+from rest_framework.exceptions import ValidationError
+
+
+class Governorate(models.Model):
+    name_ar = models.CharField(max_length=64)
+    name_en = models.CharField(max_length=64)
+
+    class Meta:
+        db_table = "governorates"
+        verbose_name = "governorate"
+        verbose_name_plural = "governorates"
+
+    def __str__(self):
+        return self.name_en
+
+
+class City(models.Model):
+    name_ar = models.CharField(max_length=64)
+    name_en = models.CharField(max_length=64)
+    gov = models.ForeignKey(
+        Governorate, on_delete=models.CASCADE, related_name="cities"
+    )
+
+    class Meta:
+        db_table = "cities"
+        verbose_name = "city"
+        verbose_name_plural = "cities"
+
+    def __str__(self):
+        return self.name_en
+
+
+class Location(models.Model):
+    lon = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    lat = models.DecimalField(max_digits=8, decimal_places=6, null=True, blank=True)
+    address = models.CharField(max_length=512, null=True, blank=True)
+
+    gov = models.ForeignKey(Governorate, on_delete=models.PROTECT)
+    city = models.ForeignKey(City, on_delete=models.PROTECT)
+
+    def clean(self):
+        if self.city.gov != self.gov:
+            raise ValidationError("City does not belong to Governorate")
+
+    class Meta:
+        db_table = "locations"
+        verbose_name = "location"
+        verbose_name_plural = "locations"
+
+    def __str__(self):
+        return f"<Location: {self.gov.name_en}, {self.city.name_en}>"
