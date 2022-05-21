@@ -15,7 +15,6 @@ class UserTests(TestCase):
             password="hardpassword",
             firebase_token="token",
             location={"gov": 1, "city": "4"},
-            fcm_token="fcm_token",
         )
 
     def test_name_max_lenght(self):

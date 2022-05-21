@@ -20,7 +20,6 @@ def create_user(
     password: str,
     firebase_token: str,
     location: Dict,
-    fcm_token: str,
 ) -> User:
 
     # Creating user's related entities
@@ -41,7 +40,7 @@ def create_user(
     # Saving user to the database
     user.save()
 
-    create_fcm_device(user=user, fcm_token=fcm_token)
+    create_fcm_device(user=user, firebase_token=firebase_token)
 
     return user
 

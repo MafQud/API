@@ -29,14 +29,14 @@ def create_notification(
 def create_fcm_device(
     *,
     user: User,
-    fcm_token: str,
+    firebase_token: str,
     device_type: Optional[str] = "android",
 ) -> FCMDevice:
 
     device = FCMDevice(
         user=user,
         type=device_type,
-        registration_id=fcm_token,
+        registration_id=firebase_token,
     )
     device.full_clean()
     device.save()
