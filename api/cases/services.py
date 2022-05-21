@@ -170,6 +170,9 @@ def publish_case(*, case: Case, performed_by: User):
     if not case.is_active:
         raise ValidationError("Cannot publish inactive case")
 
+    if case.posted_at:
+        raise ValidationError("Case already published")
+
     case.publish()
     case.save()
 

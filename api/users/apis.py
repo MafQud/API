@@ -91,7 +91,7 @@ class UserCasesListApi(APIView):
         type = serializers.CharField()
         state = serializers.CharField(source="get_state_display")
         name = serializers.CharField(source="details.name")
-        thumbnail = serializers.URLField()
+        thumbnail = serializers.URLField(source="thumbnail.url")
         last_seen = serializers.DateField(source="details.last_seen")
         posted_at = serializers.DateTimeField()
         location = inline_serializer(
