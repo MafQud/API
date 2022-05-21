@@ -1,9 +1,29 @@
 from rest_framework import permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from api.authentication.selectors import validate_phone
 from api.common.validators import is_phone
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    class TokenSerializer(TokenObtainPairSerializer):
+        @classmethod
+        def get_token(cls, user):
+            token = super().get_token(user)
+
+            # Users Claims
+            token["name"] = user.name
+            token["phone"] = user.username
+            token["national_id"] = user.national_id
+            token["firebase_token"] = user.firebase_token
+            token["gov"] = user.location.gov.name_ar
+            token["city"] = user.location.city.name_ar
+            return token
+
+    serializer_class = TokenSerializer
 
 
 class ValidatePhoneAPI(APIView):

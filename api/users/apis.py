@@ -16,7 +16,6 @@ class CreateUserApi(APIView):
         username = serializers.CharField()
         password = serializers.CharField()
         name = serializers.CharField()
-        fcm_token = serializers.CharField()
         firebase_token = serializers.CharField()
         location = inline_serializer(
             fields={
@@ -55,7 +54,6 @@ class UpdateUserApi(APIView):
     class InputSerializer(serializers.Serializer):
         name = serializers.CharField(required=False)
         firebase_token = serializers.CharField(required=False)
-        fcm_token = serializers.CharField(required=False)
         location = inline_serializer(
             fields={
                 "gov": serializers.IntegerField(),
@@ -91,7 +89,7 @@ class UserCasesListApi(APIView):
         type = serializers.CharField()
         state = serializers.CharField(source="get_state_display")
         name = serializers.CharField(source="details.name")
-        thumbnail = serializers.URLField()
+        thumbnail = serializers.URLField(source="thumbnail.url")
         last_seen = serializers.DateField(source="details.last_seen")
         posted_at = serializers.DateTimeField()
         location = inline_serializer(
