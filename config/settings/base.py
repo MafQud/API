@@ -2,6 +2,7 @@
 Base settings to build other settings files upon.
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -316,15 +317,16 @@ SOCIALACCOUNT_FORMS = {"signup": "api.users.forms.UserSocialSignupForm"}
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "api.errors.handlers.custom_exception_handler",
 }
-
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=24),
+}
 # JWT config
 REST_USE_JWT = True
 JWT_AUTH_COOKIE = "my-app-auth"
