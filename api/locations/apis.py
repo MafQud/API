@@ -21,7 +21,7 @@ class GovernorateListApi(APIView):
         # Serializing the results
         serializer = self.OutputSerializer(govs, many=True)
 
-        return Response(serializer.data)
+        return Response({"results": serializer.data})
 
 
 class GovernorateCitiesListApi(APIView):
@@ -40,4 +40,4 @@ class GovernorateCitiesListApi(APIView):
         # Serializing the results
         serializer = self.OutputSerializer(cities, many=True)
 
-        return Response(serializer.data)
+        return Response({"results": serializer.data})
