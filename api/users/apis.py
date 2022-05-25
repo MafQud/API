@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 
 from api.common.utils import inline_serializer
 from api.users.models import User
-from api.users.selectors import get_user, get_user_cases
+from api.users.selectors import get_user
 from api.users.services import create_user, set_national_id, update_user
 
 
@@ -81,33 +81,6 @@ class UpdateUserApi(APIView):
             data=serializer.validated_data,
         )
         return Response(status=status.HTTP_200_OK)
-
-
-class UserCasesListApi(APIView):
-    class OutputSerializer(serializers.Serializer):
-        id = serializers.IntegerField()
-        type = serializers.CharField()
-        state = serializers.CharField(source="get_state_display")
-        name = serializers.CharField(source="details.name")
-        thumbnail = serializers.URLField(source="thumbnail.url")
-        last_seen = serializers.DateField(source="details.last_seen")
-        posted_at = serializers.DateTimeField()
-        location = inline_serializer(
-            fields={
-                "gov": serializers.CharField(source="gov.name_ar"),
-                "city": serializers.CharField(source="city.name_ar"),
-            }
-        )
-
-    def get(self, request):
-
-        # Listing all user cases
-        cases = get_user_cases(request.user)
-
-        # Serializing the results
-        serializer = self.OutputSerializer(cases, many=True)
-
-        return Response(serializer.data)
 
 
 class SetNationalIdApi(APIView):

@@ -1,10 +1,11 @@
 from rest_framework import serializers, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.apis.pagination import LimitOffsetPagination, get_paginated_response
+from api.apis.pagination import get_paginated_response
 from api.cases.models import Case
-from api.cases.selectors import get_case, list_case, list_case_match
+from api.cases.selectors import get_case, list_case, list_case_match, list_user_cases
 from api.cases.services import create_case, publish_case
 from api.common.utils import inline_serializer
 
@@ -50,8 +51,8 @@ class CreateCaseApi(APIView):
 
 
 class CaseListApi(APIView):
-    class Pagination(LimitOffsetPagination):
-        default_limit = 10
+    class Pagination(PageNumberPagination):
+        page_size = 10
 
     class FilterSerializer(serializers.Serializer):
         type = serializers.CharField(required=False)
@@ -133,6 +134,9 @@ class DetailsCaseApi(APIView):
 
 
 class CaseMatchListApi(APIView):
+    class Pagination(PageNumberPagination):
+        page_size = 10
+
     def get(self, request, case_id):
 
         # Fetching our case
@@ -165,10 +169,13 @@ class CaseMatchListApi(APIView):
         # Listing all case matches
         matches = list_case_match(case=case, fetched_by=request.user)
 
-        # Serializing the results
-        serializer = OutputSerializer(matches, many=True)
-
-        return Response(serializer.data)
+        return get_paginated_response(
+            pagination_class=self.Pagination,
+            serializer_class=OutputSerializer,
+            queryset=matches,
+            request=request,
+            view=self,
+        )
 
 
 class CasePublishApi(APIView):
@@ -176,3 +183,36 @@ class CasePublishApi(APIView):
         case = get_case(pk=case_id, fetched_by=request.user)
         publish_case(case=case, performed_by=request.user)
         return Response(status=status.HTTP_200_OK)
+
+
+class UserCasesListApi(APIView):
+    class Pagination(PageNumberPagination):
+        page_size = 10
+
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+        type = serializers.CharField()
+        state = serializers.CharField(source="get_state_display")
+        name = serializers.CharField(source="details.name")
+        thumbnail = serializers.URLField(source="thumbnail.url")
+        last_seen = serializers.DateField(source="details.last_seen")
+        posted_at = serializers.DateTimeField()
+        location = inline_serializer(
+            fields={
+                "gov": serializers.CharField(source="gov.name_ar"),
+                "city": serializers.CharField(source="city.name_ar"),
+            }
+        )
+
+    def get(self, request):
+
+        # Listing all user cases
+        cases = list_user_cases(request.user)
+
+        return get_paginated_response(
+            pagination_class=self.Pagination,
+            serializer_class=self.OutputSerializer,
+            queryset=cases,
+            request=request,
+            view=self,
+        )

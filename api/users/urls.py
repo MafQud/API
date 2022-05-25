@@ -1,12 +1,7 @@
 from django.urls import path
 
-from api.users.apis import (
-    CreateUserApi,
-    DetailUserApi,
-    SetNationalIdApi,
-    UpdateUserApi,
-    UserCasesListApi,
-)
+from api.cases.apis import UserCasesListApi
+from api.users.apis import CreateUserApi, DetailUserApi, SetNationalIdApi, UpdateUserApi
 
 app_name = "users"
 urlpatterns = [
