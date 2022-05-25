@@ -1,13 +1,14 @@
 from rest_framework import serializers
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 
-from api.apis.pagination import LimitOffsetPagination, get_paginated_response
-from api.notifications.selectors import list_notification
+from api.apis.pagination import get_paginated_response
+from api.notifications.selectors import list_user_notification
 
 
 class NotificationListApi(APIView):
-    class Pagination(LimitOffsetPagination):
-        default_limit = 10
+    class Pagination(PageNumberPagination):
+        page_size = 15
 
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
@@ -20,7 +21,7 @@ class NotificationListApi(APIView):
 
     def get(self, request):
 
-        notifications = list_notification(user=request.user)
+        notifications = list_user_notification(user=request.user)
 
         return get_paginated_response(
             pagination_class=self.Pagination,

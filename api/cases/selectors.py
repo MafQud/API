@@ -44,3 +44,7 @@ def list_case_match(*, case: Case, fetched_by: User) -> QuerySet[CaseMatch]:
         qs = case.missing_matches.all()
 
     return qs
+
+
+def list_user_cases(user: User) -> QuerySet[Case]:
+    return user.cases.all()
