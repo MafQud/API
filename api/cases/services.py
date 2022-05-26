@@ -37,9 +37,9 @@ def create_case(
     type: CaseType,
     user: User,
     location: Dict,
-    details: Dict,
-    thumbnail: id,
+    thumbnail: int,
     file_ids: List[int],
+    details: Optional[Dict] = {},
 ) -> Case:
 
     # Fetch & create case related objects
@@ -147,6 +147,8 @@ def activate_case(case: Case):
     case.activate()
     # TODO success or failure notification
     create_notification(
+        case=case,
+        action=Notification.Action.DETAILS,
         title="تم رفع الحاله بنجاح",
         body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
         level=Notification.Level.INFO,
@@ -177,6 +179,8 @@ def publish_case(*, case: Case, performed_by: User):
     case.save()
 
     create_notification(
+        case=case,
+        action=Notification.Action.DETAILS,
         title="تم نشر الحاله بنجاح",
         body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
         level=Notification.Level.SUCCESS,
