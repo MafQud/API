@@ -3,7 +3,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.apis.pagination import get_paginated_response
+from api.apis.pagination import LimitOffsetPagination, get_paginated_response
 from api.cases.models import Case
 from api.cases.selectors import get_case, list_case, list_case_match, list_user_cases
 from api.cases.services import create_case, publish_case
@@ -29,6 +29,7 @@ class CreateCaseApi(APIView):
             }
         )
         details = inline_serializer(
+            required=False,
             fields={
                 "name": serializers.CharField(required=False),
                 "gender": serializers.CharField(required=False),
@@ -39,7 +40,7 @@ class CreateCaseApi(APIView):
                     required=False,
                     fields={**location.fields},
                 ),
-            }
+            },
         )
 
     def post(self, request):
@@ -134,8 +135,8 @@ class DetailsCaseApi(APIView):
 
 
 class CaseMatchListApi(APIView):
-    class Pagination(PageNumberPagination):
-        page_size = 10
+    class Pagination(LimitOffsetPagination):
+        default_limit = 10
 
     def get(self, request, case_id):
 
@@ -186,8 +187,8 @@ class CasePublishApi(APIView):
 
 
 class UserCasesListApi(APIView):
-    class Pagination(PageNumberPagination):
-        page_size = 10
+    class Pagination(LimitOffsetPagination):
+        default_limit = 10
 
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()

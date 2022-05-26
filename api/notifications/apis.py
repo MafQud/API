@@ -1,14 +1,13 @@
 from rest_framework import serializers
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 
-from api.apis.pagination import get_paginated_response
+from api.apis.pagination import LimitOffsetPagination, get_paginated_response
 from api.notifications.selectors import list_user_notification
 
 
 class NotificationListApi(APIView):
-    class Pagination(PageNumberPagination):
-        page_size = 15
+    class Pagination(LimitOffsetPagination):
+        default_limit = 15
 
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
