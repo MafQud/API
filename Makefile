@@ -30,6 +30,9 @@ makemessages:
 compilemessages:
 	docker-compose -f local.yml run --rm django python manage.py compilemessages
 
+superuser:
+	docker-compose -f local.yml run --rm django python manage.py createsuperuser
+
 urls:
 	docker-compose -f local.yml run django python manage.py show_urls
 
