@@ -1,4 +1,5 @@
 from rest_framework import serializers, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -51,8 +52,8 @@ class CreateCaseApi(APIView):
 
 
 class CaseListApi(APIView):
-    class Pagination(LimitOffsetPagination):
-        default_limit = 10
+    class Pagination(PageNumberPagination):
+        page_size = 10
 
     class FilterSerializer(serializers.Serializer):
         type = serializers.CharField(required=False)
