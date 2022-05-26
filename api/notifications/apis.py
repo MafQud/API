@@ -11,12 +11,12 @@ class NotificationListApi(APIView):
 
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
-        body = serializers.CharField()
-        title = serializers.CharField()
+        case = serializers.IntegerField(source="case.id")
         level = serializers.CharField()
+        action = serializers.CharField()
+        body = serializers.CharField()
         created_at = serializers.DateTimeField()
         read_at = serializers.DateTimeField()
-        sent_to = serializers.URLField(source="sent_to.get_absolute_url")
 
     def get(self, request):
 
