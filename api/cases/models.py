@@ -109,7 +109,7 @@ class CasePhoto(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="photos")
 
 
-class CaseContacts(models.Model):
+class CaseContact(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="contacts")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="contacts")
     contacted_at = models.DateTimeField(auto_now_add=True)
