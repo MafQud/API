@@ -107,3 +107,10 @@ class CaseMatch(models.Model):
 class CasePhoto(models.Model):
     file = models.OneToOneField(File, on_delete=models.CASCADE)
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="photos")
+
+
+class CaseContacts(models.Model):
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="contacts")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="contacts")
+    contacted_at = models.DateTimeField(auto_now_add=True)
+    answered_at = models.DateTimeField(null=True, blank=True, default=None)
