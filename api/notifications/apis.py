@@ -11,7 +11,8 @@ class NotificationListApi(APIView):
 
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
-        case = serializers.IntegerField(source="case.id")
+        case_id = serializers.IntegerField(source="case.id")
+        case_type = serializers.CharField(source="case.type")
         level = serializers.CharField()
         action = serializers.CharField()
         body = serializers.CharField()

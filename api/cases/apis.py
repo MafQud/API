@@ -192,7 +192,7 @@ class UserCasesListApi(APIView):
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
         type = serializers.CharField()
-        state = serializers.CharField(source="get_state_display")
+        state = serializers.CharField()
         name = serializers.CharField(source="details.name")
         thumbnail = serializers.URLField(source="thumbnail.url")
         last_seen = serializers.DateField(source="details.last_seen")
