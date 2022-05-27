@@ -11,10 +11,10 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: api_production_django
-    platform: linux/x86_64
+    # platform: linux/x86_64
     depends_on:
       - postgres
-      - redis
+      # - redis
     env_file:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
@@ -45,29 +45,29 @@ services:
       - "0.0.0.0:443:443"
       - "0.0.0.0:5555:5555"
 
-  redis:
-    image: redis:6
+  # redis:
+  #   image: redis:6
 
-  celeryworker:
-    <<: *django
-    image: api_production_celeryworker
-    command: /start-celeryworker
+  # celeryworker:
+  #   <<: *django
+  #   image: api_production_celeryworker
+  #   command: /start-celeryworker
 
-  celerybeat:
-    <<: *django
-    image: api_production_celerybeat
-    command: /start-celerybeat
+  # celerybeat:
+  #   <<: *django
+  #   image: api_production_celerybeat
+  #   command: /start-celerybeat
 
-  flower:
-    <<: *django
-    image: api_production_flower
-    command: /start-flower
+  # flower:
+  #   <<: *django
+  #   image: api_production_flower
+  #   command: /start-flower
 
-  awscli:
-    build:
-      context: .
-      dockerfile: ./compose/production/aws/Dockerfile
-    env_file:
-      - ./.envs/.production/.django
-    volumes:
-      - production_postgres_data_backups:/backups:z
+  # awscli:
+  #   build:
+  #     context: .
+  #     dockerfile: ./compose/production/aws/Dockerfile
+  #   env_file:
+  #     - ./.envs/.production/.django
+  #   volumes:
+  #     - production_postgres_data_backups:/backups:z
