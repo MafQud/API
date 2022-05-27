@@ -31,7 +31,7 @@ certificatesResolvers:
 http:
   routers:
     web-secure-router:
-      rule: "Host(`mafqud.com`) || Host(`www.mafqud.com`)"
+      rule: "Host(`ec2-15-161-158-189.eu-south-1.compute.amazonaws.com`) || Host(`ec2-15-161-158-189.eu-south-1.compute.amazonaws.com`)"
       entryPoints:
         - web-secure
       middlewares:

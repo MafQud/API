@@ -346,7 +346,7 @@ SPECTACULAR_SETTINGS = {
     "SERVERS": [
         {"url": "http://127.0.0.1:8000", "description": "Local Development server"},
         {
-            "url": "ec2-15-160-246-194.eu-south-1.compute.amazonaws.com",
+            "url": "ec2-15-161-158-189.eu-south-1.compute.amazonaws.com",
             "description": "Production server",
         },
     ],

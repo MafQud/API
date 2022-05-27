@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from api.common.utils import get_object
@@ -13,7 +14,7 @@ from api.notifications.models import Notification
 from api.notifications.services import create_notification
 from api.users.models import User
 
-from .models import Case, CaseDetails, CaseMatch, CasePhoto
+from .models import Case, CaseContact, CaseDetails, CaseMatch, CasePhoto
 
 # from fcm_django.models import FCMDevice
 # from firebase_admin.messaging import Message
@@ -195,3 +196,20 @@ def publish_case(*, case: Case, performed_by: User):
     # )
     # device = FCMDevice.objects.filter(user=case.user).first()
     # device.send_message(msg)
+
+
+def create_case_contact(*, user: User, case: Case) -> CaseContact:
+    contact = CaseContact(case=case, user=user)
+    contact.full_clean()
+    contact.save()
+
+    return contact
+
+
+@transaction.atomic
+def update_case_contact(contact: CaseContact) -> None:
+    contact.answered_at = timezone.now()
+    contact.case.finish()
+
+    contact.case.save()
+    contact.save()

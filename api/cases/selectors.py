@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from api.users.models import User
 
 from .filters import CaseFilter
-from .models import Case, CaseMatch
+from .models import Case, CaseContact, CaseMatch
 
 
 def get_case(*, pk: int, fetched_by: User) -> Case:
@@ -48,3 +48,7 @@ def list_case_match(*, case: Case, fetched_by: User) -> QuerySet[CaseMatch]:
 
 def list_user_cases(user: User) -> QuerySet[Case]:
     return user.cases.all()
+
+
+def get_case_contact(pk: int) -> CaseContact:
+    return get_object_or_404(CaseContact, pk=pk)

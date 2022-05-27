@@ -4,8 +4,19 @@ from rest_framework.views import APIView
 
 from api.apis.pagination import LimitOffsetPagination, get_paginated_response
 from api.cases.models import Case
-from api.cases.selectors import get_case, list_case, list_case_match, list_user_cases
-from api.cases.services import create_case, publish_case
+from api.cases.selectors import (
+    get_case,
+    get_case_contact,
+    list_case,
+    list_case_match,
+    list_user_cases,
+)
+from api.cases.services import (
+    create_case,
+    create_case_contact,
+    publish_case,
+    update_case_contact,
+)
 from api.common.utils import inline_serializer
 
 
@@ -192,7 +203,7 @@ class UserCasesListApi(APIView):
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
         type = serializers.CharField()
-        state = serializers.CharField(source="get_state_display")
+        state = serializers.CharField()
         name = serializers.CharField(source="details.name")
         thumbnail = serializers.URLField(source="thumbnail.url")
         last_seen = serializers.DateField(source="details.last_seen")
@@ -216,3 +227,33 @@ class UserCasesListApi(APIView):
             request=request,
             view=self,
         )
+
+
+class CaseContactCreateApi(APIView):
+    class InputSerializer(serializers.Serializer):
+        case_id = serializers.IntegerField()
+
+    class OutputSerializer(serializers.Serializer):
+        id = serializers.IntegerField()
+
+    def post(self, request):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        case = get_case(
+            pk=serializer.validated_data["case_id"],
+            fetched_by=request.user,
+        )
+        contact = create_case_contact(user=request.user, case=case)
+
+        return Response(
+            data=self.OutputSerializer(contact).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CaseContactUpdateApi(APIView):
+    def get(self, request, case_contact_id):
+        contact = get_case_contact(pk=case_contact_id)
+        update_case_contact(contact=contact)
+
+        return Response(status=status.HTTP_200_OK)
