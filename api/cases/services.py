@@ -123,10 +123,16 @@ def process_case(case: Case) -> List[Dict[int, int]]:
 
 
 def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> None:
-    """
-    Bind the processed case with it's matches by instaniating CaseMatch objects
-    """
+    """ """
     if not matches_list:
+        create_notification(
+            case=case,
+            action=Notification.Action.PUBLISH,
+            title="لم نجد حالات مشابه هل تود فى نشر الحاله",
+            body="لم نعثر على اى حالات مشابهه يمكنك نشر بيانات المفقود فى نطاق اوسع لتزيد احتماليه العثور عليه",
+            level=Notification.Level.WARNING,
+            sent_to=case.user,
+        )
         return
 
     cases_ids = [match["id"] for match in matches_list]
@@ -140,6 +146,24 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
             create_case_match(missing=case, found=match, score=score)
         else:
             create_case_match(missing=match, found=case, score=score)
+
+        create_notification(
+            case=match,
+            action=Notification.Action.MATCHES,
+            title="تم العثور على حالات مشابه",
+            body="تم الوصول لبعض النتائج قم بتصفحها الان",
+            level=Notification.Level.SUCCESS,
+            sent_to=match.user,
+        )
+
+    create_notification(
+        case=case,
+        action=Notification.Action.MATCHES,
+        title="تم العثور على حالات مشابه",
+        body="تم الوصول لبعض النتائج قم بتصفحها الان",
+        level=Notification.Level.SUCCESS,
+        sent_to=case.user,
+    )
 
 
 def activate_case(case: Case):

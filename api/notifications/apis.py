@@ -1,8 +1,10 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.apis.pagination import LimitOffsetPagination, get_paginated_response
-from api.notifications.selectors import list_user_notification
+from api.notifications.selectors import get_notification, list_user_notification
+from api.notifications.services import read_notification
 
 
 class NotificationListApi(APIView):
@@ -30,3 +32,12 @@ class NotificationListApi(APIView):
             request=request,
             view=self,
         )
+
+
+class NotificationReadApi(APIView):
+    def get(self, request, notification_id):
+
+        notification = get_notification(pk=notification_id, fetched_by=request.user)
+        read_notification(notification)
+
+        return Response(status=status.HTTP_200_OK)
