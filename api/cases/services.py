@@ -127,7 +127,7 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
     if not matches_list:
         create_notification(
             case=case,
-            action=Notification.Action.MATCHES,
+            action=Notification.Action.PUBLISH,
             title="لم نجد حالات مشابه هل تود فى نشر الحاله",
             body="لم نعثر على اى حالات مشابهه يمكنك نشر بيانات المفقود فى نطاق اوسع لتزيد احتماليه العثور عليه",
             level=Notification.Level.WARNING,

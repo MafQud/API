@@ -1,5 +1,6 @@
 from typing import Optional
 
+from django.utils import timezone
 from fcm_django.models import FCMDevice
 
 from api.cases.models import Case
@@ -47,3 +48,8 @@ def create_fcm_device(
     device.save()
 
     return device
+
+
+def read_notification(notification: Notification):
+    notification.read_at = timezone.now()
+    notification.save()
