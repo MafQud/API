@@ -53,7 +53,7 @@ def s3_get_client():
         aws_access_key_id=credentials.access_key_id,
         aws_secret_access_key=credentials.secret_access_key,
         region_name="eu-south-1",
-        endpoint_url="https://s3.eu-south-1.amazonaws.com",
+        endpoint_url="https://s3.eu-south-1.amazonaws.com/",
         config=Config(signature_version="s3v4"),
     )
 
