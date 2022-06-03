@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 import boto3
 from attrs import define
+from botocore.config import Config
 
 from api.common.utils import assert_settings
 
@@ -51,7 +52,9 @@ def s3_get_client():
         service_name="s3",
         aws_access_key_id=credentials.access_key_id,
         aws_secret_access_key=credentials.secret_access_key,
-        region_name=credentials.region_name,
+        region_name="eu-south-1",
+        endpoint_url="https://s3.eu-south-1.amazonaws.com/",
+        config=Config(signature_version="s3v4"),
     )
 
 
