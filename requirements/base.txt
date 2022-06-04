@@ -29,3 +29,10 @@ django-fsm==2.8.0  # https://github.com/viewflow/django-fsm
 boto3==1.21.45  # https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 django-filter==21.1 # https://github.com/carltongibson/django-filter
 fcm-django==1.0.11 # https://pypi.org/project/fcm-django/1.0.11/
+# Machine Learning Model
+opencv-python==4.5.5.64 # https://github.com/opencv/opencv
+deepface==0.0.75 # https://pypi.org/project/deepface/
+mtcnn==0.1.1 # https://github.com/ipazc/mtcnn
+scikit-learn==1.1.1 #https://pypi.org/project/scikit-learn/
+tensorflow==2.9.1 # https://pypi.org/project/tensorflow/
+joblib==1.1.0 # https://joblib.readthedocs.io/en/latest/installing.html

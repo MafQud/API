@@ -2,6 +2,7 @@ from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import numpy as np
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -146,6 +147,9 @@ def process_case(case: Case) -> Dict[int, float]:
     if ml_model is None:
         all_encodings = PhotoEncoding.objects.all()
 
+        encodings_data = ()
+        encodings_labels = ()
+
         for photo_encoding in all_encodings:
             encodings_data, encodings_labels = zip(
                 *[
@@ -157,8 +161,8 @@ def process_case(case: Case) -> Dict[int, float]:
         ml_model = AIModel(
             facenet_path=settings.APPS_DIR / "integrations/ai/facenet_keras.h5",
             knn_path=settings.APPS_DIR / "integrations/ai/knn_new.clf",
-            data=encodings_data,
-            labels=encodings_labels,
+            data=np.asarray(encodings_data),
+            labels=np.asarray(encodings_labels),
         )
 
     matches = {}

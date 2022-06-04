@@ -21,7 +21,7 @@ from sklearn.preprocessing import Normalizer
 from tensorflow.keras.models import load_model
 
 
-class MafQud:
+class AIModel:
     def __init__(
         self, facenet_path: Path, knn_path: Path, data: np.ndarray, labels: np.ndarray
     ) -> None:
