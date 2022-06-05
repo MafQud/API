@@ -20,6 +20,8 @@ from sklearn.metrics import (
 from sklearn.preprocessing import Normalizer
 from tensorflow.keras.models import load_model
 
+# from time import time
+
 
 class AIModel:
     def __init__(
@@ -173,7 +175,7 @@ class AIModel:
         *,
         threshold: Optional[int] = 15,
         n_neighbors: Optional[int] = 9
-    ) -> Dict[str, int]:
+    ) -> Dict[int, int]:
         """Check face identity
 
         Args:
@@ -181,7 +183,7 @@ class AIModel:
             threshold (int, optional): threshold for face identification Defaults to 0.5.
 
         Returns:
-            identity (Dict[str, int]): return ids with number of images.
+            identity (Dict[int, int]): return ids with number of images.
         """
         closest_distances = self.knn.kneighbors(
             encodings.reshape(1, -1), n_neighbors=n_neighbors
@@ -192,15 +194,32 @@ class AIModel:
         for idx, distance in zip(indices, distances):
             print(idx, self.labels[idx], distance)
             if distance <= threshold:
-                if not ids.__contains__(str(self.labels[idx])):
-                    ids[str(self.labels[idx])] = 1
+                if not ids.__contains__(self.labels[idx]):
+                    ids[self.labels[idx]] = (1, distance)
                 else:
-                    ids[str(self.labels[idx])] += 1
+                    num_photo = ids[self.labels[idx]][0] + 1
+                    dist = ids[self.labels[idx]][1] + distance
+                    ids[self.labels[idx]] = (num_photo, dist)
 
         if len(ids) == 0:
-            return {"-1": 0}
+            return {-1: 0}
         else:
-            return ids
+            ids_distances = [[], [], []]
+
+            for id, val in ids.items():
+                ids_distances[val[0] - 1].append((id, val[1] / val[0]))
+
+            for id_distance in ids_distances:
+                id_distance.sort(key=lambda i: i[1])
+
+            ids_confidence = {}
+
+            for num_photos in range(0, len(ids_distances)):
+                for rank in range(0, len(ids_distances[num_photos])):
+                    eqn = (num_photos + 1) / 3.0 - (rank + 1) * 0.03
+                    ids_confidence[ids_distances[num_photos][rank][0]] = eqn
+
+            return ids_confidence
 
     def retrain_model(self, new_encodings: np.ndarray, identity: int):
         """Retrain model on new images
