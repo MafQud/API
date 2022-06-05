@@ -73,6 +73,7 @@ class CaseListApi(APIView):
         end_date = serializers.DateField(required=False)
         gov = serializers.IntegerField(required=False)
         name = serializers.CharField(required=False)
+        include_null = serializers.BooleanField(required=False)
 
     class OutputSerializer(serializers.Serializer):
         id = serializers.IntegerField()
