@@ -283,3 +283,6 @@ api/media/
 
 # Media files
 media
+
+# Google credentials
+google-credentials.json
