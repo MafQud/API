@@ -75,6 +75,7 @@ def update_case():
     ...
 
 
+@transaction.atomic
 def create_case_details(
     *,
     case: Case,
@@ -124,6 +125,7 @@ def process_case(case: Case) -> List[Dict[int, int]]:
 def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> None:
     """ """
     if not matches_list:
+        # TODO refactor notifications
         create_notification(
             case=case,
             action=Notification.Action.PUBLISH,
@@ -132,6 +134,16 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
             level=Notification.Level.WARNING,
             sent_to=case.user,
         )
+        msg = Message(
+            notification=FirebaseNotification(
+                title="لم نجد حالات مشابه هل تود فى نشر الحاله",
+                body="لم نعثر على اى حالات مشابهه يمكنك نشر بيانات المفقود فى نطاق اوسع لتزيد احتماليه العثور عليه",
+            )
+        )
+
+        device = FCMDevice.objects.filter(user=case.user).first()
+        device.send_message(msg)
+
         return
 
     cases_ids = [match["id"] for match in matches_list]
@@ -154,6 +166,15 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
             level=Notification.Level.SUCCESS,
             sent_to=match.user,
         )
+        msg = Message(
+            notification=FirebaseNotification(
+                title="تم العثور على حالات مشابه",
+                body="تم الوصول لبعض النتائج قم بتصفحها الان",
+            )
+        )
+
+        device = FCMDevice.objects.filter(user=match.user).first()
+        device.send_message(msg)
 
     create_notification(
         case=case,
@@ -163,8 +184,18 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
         level=Notification.Level.SUCCESS,
         sent_to=case.user,
     )
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم العثور على حالات مشابه",
+            body="تم الوصول لبعض النتائج قم بتصفحها الان",
+        )
+    )
+
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
+@transaction.atomic
 def activate_case(case: Case):
     matches = process_case(case)
     case_matching_binding(case=case, matches_list=matches)
@@ -190,6 +221,7 @@ def activate_case(case: Case):
     device.send_message(msg)
 
 
+# TODO refactor object permission on view level to some mixin or permission class
 def publish_case(*, case: Case, performed_by: User):
     if case.user != performed_by:
         raise PermissionDenied()
@@ -220,6 +252,48 @@ def publish_case(*, case: Case, performed_by: User):
     )
     device = FCMDevice.objects.filter(user=case.user).first()
     device.send_message(msg)
+
+
+def archive_case(*, case: Case, performed_by: User):
+    if case.user != performed_by:
+        raise PermissionDenied()
+
+    if case.state == Case.States.ARCHIVED:
+        raise ValidationError("Case already archived")
+
+    case.archive()
+    case.save()
+    create_notification(
+        case=case,
+        action=Notification.Action.PUBLISH,
+        title="تم ارشفه الحاله بنجاح",
+        body="تم ارشفه الحاله لن يتمكن اى احد للوصول لها غيرك",
+        level=Notification.Level.WARNING,
+        sent_to=case.user,
+    )
+
+
+def finish_case(*, case: Case, performed_by: User):
+    if case.user != performed_by:
+        raise PermissionDenied()
+
+    if not case.is_active:
+        raise ValidationError("Cannot finish inactive case")
+
+    if case.state == Case.States.FINISHED:
+        raise ValidationError("Case already closed")
+
+    case.finish()
+    case.save()
+
+    create_notification(
+        case=case,
+        action=Notification.Action.NONE,
+        title="تم ارشفه الحاله بنجاح",
+        body="تم اغلاق الحاله بنجاح نرجو ان يكون ذويك على ما يرام",
+        level=Notification.Level.SUCCESS,
+        sent_to=case.user,
+    )
 
 
 def create_case_contact(*, user: User, case: Case) -> CaseContact:
