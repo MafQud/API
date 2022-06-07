@@ -4,6 +4,9 @@ from typing import Dict, List, Optional
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils import timezone
+from fcm_django.models import FCMDevice
+from firebase_admin.messaging import Message
+from firebase_admin.messaging import Notification as FirebaseNotification
 from rest_framework.exceptions import ValidationError
 
 from api.common.utils import get_object
@@ -15,10 +18,6 @@ from api.notifications.services import create_notification
 from api.users.models import User
 
 from .models import Case, CaseContact, CaseDetails, CaseMatch, CasePhoto
-
-# from fcm_django.models import FCMDevice
-# from firebase_admin.messaging import Message
-# from firebase_admin.messaging import Notification as FirebaseNotification
 
 Gender = CaseDetails.Gender
 CaseType = Case.Types
@@ -180,14 +179,15 @@ def activate_case(case: Case):
         sent_to=case.user,
     )
 
-    # msg = Message(
-    #     notification=FirebaseNotification(
-    #         title="تم رفع الحاله بنجاح",
-    #         body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
-    #     )
-    # )
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم رفع الحاله بنجاح",
+            body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
+        )
+    )
 
-    # case.user.fcmdevice.send_message(msg)
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
 def publish_case(*, case: Case, performed_by: User):
@@ -212,14 +212,14 @@ def publish_case(*, case: Case, performed_by: User):
         sent_to=case.user,
     )
 
-    # msg = Message(
-    #     notification=FirebaseNotification(
-    #         title="تم نشر الحاله بنجاح",
-    #         body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
-    #     )
-    # )
-    # device = FCMDevice.objects.filter(user=case.user).first()
-    # device.send_message(msg)
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم نشر الحاله بنجاح",
+            body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
+        )
+    )
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
 def create_case_contact(*, user: User, case: Case) -> CaseContact:
