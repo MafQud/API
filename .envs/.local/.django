@@ -20,4 +20,4 @@ FILE_UPLOAD_STORAGE=local
 
 # Firebase
 # ------------------------------------------------------------------------------
-GOOGLE_APPLICATION_CREDENTIALS=/home/$USER/google-services.json
+GOOGLE_APPLICATION_CREDENTIALS=/app/google-credentials.json

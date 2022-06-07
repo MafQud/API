@@ -4,6 +4,9 @@ from typing import Dict, List, Optional
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils import timezone
+from fcm_django.models import FCMDevice
+from firebase_admin.messaging import Message
+from firebase_admin.messaging import Notification as FirebaseNotification
 from rest_framework.exceptions import ValidationError
 
 from api.common.utils import get_object
@@ -15,10 +18,6 @@ from api.notifications.services import create_notification
 from api.users.models import User
 
 from .models import Case, CaseContact, CaseDetails, CaseMatch, CasePhoto
-
-# from fcm_django.models import FCMDevice
-# from firebase_admin.messaging import Message
-# from firebase_admin.messaging import Notification as FirebaseNotification
 
 Gender = CaseDetails.Gender
 CaseType = Case.Types
@@ -126,6 +125,7 @@ def process_case(case: Case) -> List[Dict[int, int]]:
 def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> None:
     """ """
     if not matches_list:
+        # TODO refactor notifications
         create_notification(
             case=case,
             action=Notification.Action.PUBLISH,
@@ -134,6 +134,16 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
             level=Notification.Level.WARNING,
             sent_to=case.user,
         )
+        msg = Message(
+            notification=FirebaseNotification(
+                title="لم نجد حالات مشابه هل تود فى نشر الحاله",
+                body="لم نعثر على اى حالات مشابهه يمكنك نشر بيانات المفقود فى نطاق اوسع لتزيد احتماليه العثور عليه",
+            )
+        )
+
+        device = FCMDevice.objects.filter(user=case.user).first()
+        device.send_message(msg)
+
         return
 
     cases_ids = [match["id"] for match in matches_list]
@@ -156,6 +166,15 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
             level=Notification.Level.SUCCESS,
             sent_to=match.user,
         )
+        msg = Message(
+            notification=FirebaseNotification(
+                title="تم العثور على حالات مشابه",
+                body="تم الوصول لبعض النتائج قم بتصفحها الان",
+            )
+        )
+
+        device = FCMDevice.objects.filter(user=match.user).first()
+        device.send_message(msg)
 
     create_notification(
         case=case,
@@ -165,6 +184,15 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
         level=Notification.Level.SUCCESS,
         sent_to=case.user,
     )
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم العثور على حالات مشابه",
+            body="تم الوصول لبعض النتائج قم بتصفحها الان",
+        )
+    )
+
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
 @transaction.atomic
@@ -182,14 +210,15 @@ def activate_case(case: Case):
         sent_to=case.user,
     )
 
-    # msg = Message(
-    #     notification=FirebaseNotification(
-    #         title="تم رفع الحاله بنجاح",
-    #         body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
-    #     )
-    # )
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم رفع الحاله بنجاح",
+            body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
+        )
+    )
 
-    # case.user.fcmdevice.send_message(msg)
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
 # TODO refactor object permission on view level to some mixin or permission class
@@ -214,14 +243,15 @@ def publish_case(*, case: Case, performed_by: User):
         level=Notification.Level.SUCCESS,
         sent_to=case.user,
     )
-    # msg = Message(
-    #     notification=FirebaseNotification(
-    #         title="تم نشر الحاله بنجاح",
-    #         body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
-    #     )
-    # )
-    # device = FCMDevice.objects.filter(user=case.user).first()
-    # device.send_message(msg)
+
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم نشر الحاله بنجاح",
+            body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
+        )
+    )
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
 def archive_case(*, case: Case, performed_by: User):
