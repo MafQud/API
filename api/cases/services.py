@@ -76,6 +76,7 @@ def update_case():
     ...
 
 
+@transaction.atomic
 def create_case_details(
     *,
     case: Case,
@@ -166,6 +167,7 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
     )
 
 
+@transaction.atomic
 def activate_case(case: Case):
     matches = process_case(case)
     case_matching_binding(case=case, matches_list=matches)
@@ -190,6 +192,7 @@ def activate_case(case: Case):
     # case.user.fcmdevice.send_message(msg)
 
 
+# TODO refactor object permission on view level to some mixin or permission class
 def publish_case(*, case: Case, performed_by: User):
     if case.user != performed_by:
         raise PermissionDenied()
@@ -211,7 +214,6 @@ def publish_case(*, case: Case, performed_by: User):
         level=Notification.Level.SUCCESS,
         sent_to=case.user,
     )
-
     # msg = Message(
     #     notification=FirebaseNotification(
     #         title="تم نشر الحاله بنجاح",
@@ -220,6 +222,48 @@ def publish_case(*, case: Case, performed_by: User):
     # )
     # device = FCMDevice.objects.filter(user=case.user).first()
     # device.send_message(msg)
+
+
+def archive_case(*, case: Case, performed_by: User):
+    if case.user != performed_by:
+        raise PermissionDenied()
+
+    if case.state == Case.States.ARCHIVED:
+        raise ValidationError("Case already archived")
+
+    case.archive()
+    case.save()
+    create_notification(
+        case=case,
+        action=Notification.Action.PUBLISH,
+        title="تم ارشفه الحاله بنجاح",
+        body="تم ارشفه الحاله لن يتمكن اى احد للوصول لها غيرك",
+        level=Notification.Level.WARNING,
+        sent_to=case.user,
+    )
+
+
+def finish_case(*, case: Case, performed_by: User):
+    if case.user != performed_by:
+        raise PermissionDenied()
+
+    if not case.is_active:
+        raise ValidationError("Cannot finish inactive case")
+
+    if case.state == Case.States.FINISHED:
+        raise ValidationError("Case already closed")
+
+    case.finish()
+    case.save()
+
+    create_notification(
+        case=case,
+        action=Notification.Action.NONE,
+        title="تم ارشفه الحاله بنجاح",
+        body="تم اغلاق الحاله بنجاح نرجو ان يكون ذويك على ما يرام",
+        level=Notification.Level.SUCCESS,
+        sent_to=case.user,
+    )
 
 
 def create_case_contact(*, user: User, case: Case) -> CaseContact:

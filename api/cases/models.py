@@ -58,11 +58,13 @@ class Case(models.Model):
     @transition(field=state, source=States.ACTIVE, target=States.FINISHED)
     def finish(self):
         self.is_active = False
+        self.posted_at = None
 
     # Switch to ARCHIVED state from any state except ARCHIVED
     @transition(field=state, source="+", target=States.ARCHIVED)
     def archive(self):
         self.is_active = False
+        self.posted_at = None
 
     # If user selected incorrect match or lost again
     @transition(

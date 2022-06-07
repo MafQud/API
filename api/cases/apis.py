@@ -12,8 +12,10 @@ from api.cases.selectors import (
     list_user_cases,
 )
 from api.cases.services import (
+    archive_case,
     create_case,
     create_case_contact,
+    finish_case,
     publish_case,
     update_case_contact,
 )
@@ -194,6 +196,20 @@ class CasePublishApi(APIView):
     def get(self, request, case_id):
         case = get_case(pk=case_id, fetched_by=request.user)
         publish_case(case=case, performed_by=request.user)
+        return Response(status=status.HTTP_200_OK)
+
+
+class CaseFinishApi(APIView):
+    def get(self, request, case_id):
+        case = get_case(pk=case_id, fetched_by=request.user)
+        finish_case(case=case, performed_by=request.user)
+        return Response(status=status.HTTP_200_OK)
+
+
+class CaseArchiveApi(APIView):
+    def get(self, request, case_id):
+        case = get_case(pk=case_id, fetched_by=request.user)
+        archive_case(case=case, performed_by=request.user)
         return Response(status=status.HTTP_200_OK)
 
 
