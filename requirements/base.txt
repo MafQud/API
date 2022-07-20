@@ -35,5 +35,6 @@ deepface==0.0.73 # https://pypi.org/project/deepface/
 mtcnn==0.1.1 # https://github.com/ipazc/mtcnn
 scikit-learn==0.24.2 #https://pypi.org/project/scikit-learn/
 # tensorflow==2.3.0 # https://pypi.org/project/tensorflow/
-keras==2.4.0 # https://pypi.org/project/keras/
+# keras==2.4.0 # https://pypi.org/project/keras/
 joblib==1.1.0 # https://joblib.readthedocs.io/en/latest/installing.html
+keras-facenet==0.3.2

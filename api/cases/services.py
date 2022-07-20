@@ -1,7 +1,7 @@
 from datetime import date
+from pathlib import Path
 from typing import Dict, List, Optional
 
-import numpy as np
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -146,21 +146,21 @@ def process_case(case: Case) -> Dict[int, float]:
     # Instantiate the model
     global ml_model
     if ml_model is None:
-        # all_encodings = PhotoEncoding.objects.all()
+        all_encodings = PhotoEncoding.objects.all()
 
-        # encodings_data = ()
-        # encodings_labels = ()
+        encodings_data = ()
+        encodings_labels = ()
 
-        # for photo_encoding in all_encodings:
-        #     encodings_data, encodings_labels = zip(
-        #         *[
-        #             (photo_encoding.values, photo_encoding.photo.case.id)
-        #             for photo_encoding in all_encodings
-        #         ]
-        #     )
-        data = np.load(settings.APPS_DIR / "integrations/ai/data.npz")
-        encodings_data = data["arr_0"]
-        encodings_labels = data["arr_1"]
+        for photo_encoding in all_encodings:
+            encodings_data, encodings_labels = zip(
+                *[
+                    (photo_encoding.values, photo_encoding.photo.case.id)
+                    for photo_encoding in all_encodings
+                ]
+            )
+        # data = np.load(settings.APPS_DIR / "integrations/ai/data.npz")
+        # encodings_data = data["arr_0"]
+        # encodings_labels = data["arr_1"]
 
         ml_model = AIModel(
             facenet_path=settings.APPS_DIR / "integrations/ai/facenet_keras.h5",
@@ -170,7 +170,7 @@ def process_case(case: Case) -> Dict[int, float]:
         )
 
     matches = {}
-    # new_photos_encodings = []
+    new_photos_encodings = []
     valid_photos = 0
     # Fetch all case photos
     photos = case.photos.all()
@@ -183,9 +183,9 @@ def process_case(case: Case) -> Dict[int, float]:
             continue
         valid_photos += 1
         # Record encoding to the database
-        # photo_encoding = create_photo_encoding(photo=photo, values=encoding)
+        photo_encoding = create_photo_encoding(photo=photo, values=encoding)
         # Temporary storing new encoding to train the model at the end
-        # new_photos_encodings.append(photo_encoding)
+        new_photos_encodings.append(photo_encoding)
         # Run the model against our new encoding to find case matches
         case_ids = ml_model.check_face_identity(encoding)
 
@@ -209,12 +209,12 @@ def process_case(case: Case) -> Dict[int, float]:
         matches[match] = matches[match] / valid_photos
 
     # Add new case photo encodings to the model training data
-    # new_case_encodings_data = [
-    #     photo_encoding.values for photo_encoding in new_photos_encodings
-    # ]
+    new_case_encodings_data = [
+        photo_encoding.values for photo_encoding in new_photos_encodings
+    ]
 
     # Retrain the model on the new data
-    # ml_model.retrain_model(new_case_encodings_data, case.id, Path("api/common"))
+    ml_model.retrain_model(new_case_encodings_data, case.id, Path("api/common"))
 
     return matches
 
