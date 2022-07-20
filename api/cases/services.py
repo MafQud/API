@@ -6,6 +6,9 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils import timezone
+from fcm_django.models import FCMDevice
+from firebase_admin.messaging import Message
+from firebase_admin.messaging import Notification as FirebaseNotification
 from rest_framework.exceptions import ValidationError
 
 from api.cases.tasks import activate_case
@@ -21,10 +24,6 @@ from api.users.models import User
 from .models import Case, CaseContact, CaseDetails, CaseMatch, CasePhoto, PhotoEncoding
 
 # from pathlib import Path
-
-# from fcm_django.models import FCMDevice
-# from firebase_admin.messaging import Message
-# from firebase_admin.messaging import Notification as FirebaseNotification
 
 Gender = CaseDetails.Gender
 CaseType = Case.Types
@@ -92,6 +91,7 @@ def update_case():
     ...
 
 
+@transaction.atomic
 def create_case_details(
     *,
     case: Case,
@@ -232,6 +232,16 @@ def case_matching_binding(*, case: Case, matches: Dict[int, int]) -> None:
             level=Notification.Level.WARNING,
             sent_to=case.user,
         )
+        msg = Message(
+            notification=FirebaseNotification(
+                title="لم نجد حالات مشابه هل تود فى نشر الحاله",
+                body="لم نعثر على اى حالات مشابهه يمكنك نشر بيانات المفقود فى نطاق اوسع لتزيد احتماليه العثور عليه",
+            )
+        )
+
+        device = FCMDevice.objects.filter(user=case.user).first()
+        device.send_message(msg)
+
         return
 
     missing = True if case.type == CaseType.MISSING else False
@@ -250,6 +260,15 @@ def case_matching_binding(*, case: Case, matches: Dict[int, int]) -> None:
             level=Notification.Level.SUCCESS,
             sent_to=match.user,
         )
+        msg = Message(
+            notification=FirebaseNotification(
+                title="تم العثور على حالات مشابه",
+                body="تم الوصول لبعض النتائج قم بتصفحها الان",
+            )
+        )
+
+        device = FCMDevice.objects.filter(user=match.user).first()
+        device.send_message(msg)
 
     create_notification(
         case=case,
@@ -259,8 +278,18 @@ def case_matching_binding(*, case: Case, matches: Dict[int, int]) -> None:
         level=Notification.Level.SUCCESS,
         sent_to=case.user,
     )
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم العثور على حالات مشابه",
+            body="تم الوصول لبعض النتائج قم بتصفحها الان",
+        )
+    )
+
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
 
 
+# TODO refactor object permission on view level to some mixin or permission class
 def publish_case(*, case: Case, performed_by: User):
     if case.user != performed_by:
         raise PermissionDenied()
@@ -282,14 +311,56 @@ def publish_case(*, case: Case, performed_by: User):
         sent_to=case.user,
     )
 
-    # msg = Message(
-    #     notification=FirebaseNotification(
-    #         title="تم نشر الحاله بنجاح",
-    #         body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
-    #     )
-    # )
-    # device = FCMDevice.objects.filter(user=case.user).first()
-    # device.send_message(msg)
+    msg = Message(
+        notification=FirebaseNotification(
+            title="تم نشر الحاله بنجاح",
+            body="تم نشر بيانات المعثور عليه بنجاح انتظر منا اشعار اخر فى حين الوصول لأى نتائج",
+        )
+    )
+    device = FCMDevice.objects.filter(user=case.user).first()
+    device.send_message(msg)
+
+
+def archive_case(*, case: Case, performed_by: User):
+    if case.user != performed_by:
+        raise PermissionDenied()
+
+    if case.state == Case.States.ARCHIVED:
+        raise ValidationError("Case already archived")
+
+    case.archive()
+    case.save()
+    create_notification(
+        case=case,
+        action=Notification.Action.PUBLISH,
+        title="تم ارشفه الحاله بنجاح",
+        body="تم ارشفه الحاله لن يتمكن اى احد للوصول لها غيرك",
+        level=Notification.Level.WARNING,
+        sent_to=case.user,
+    )
+
+
+def finish_case(*, case: Case, performed_by: User):
+    if case.user != performed_by:
+        raise PermissionDenied()
+
+    if not case.is_active:
+        raise ValidationError("Cannot finish inactive case")
+
+    if case.state == Case.States.FINISHED:
+        raise ValidationError("Case already closed")
+
+    case.finish()
+    case.save()
+
+    create_notification(
+        case=case,
+        action=Notification.Action.NONE,
+        title="تم ارشفه الحاله بنجاح",
+        body="تم اغلاق الحاله بنجاح نرجو ان يكون ذويك على ما يرام",
+        level=Notification.Level.SUCCESS,
+        sent_to=case.user,
+    )
 
 
 def create_case_contact(*, user: User, case: Case) -> CaseContact:

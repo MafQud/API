@@ -401,4 +401,4 @@ if FILE_UPLOAD_STORAGE == FileUploadStorage.S3:
     # https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
     AWS_DEFAULT_ACL = env("AWS_DEFAULT_ACL", default="public-read")
 
-    AWS_PRESIGNED_EXPIRY = env.int("AWS_PRESIGNED_EXPIRY", default=10)  # seconds
+    AWS_PRESIGNED_EXPIRY = env.int("AWS_PRESIGNED_EXPIRY", default=300)  # seconds
