@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -109,6 +110,13 @@ class CaseMatch(models.Model):
 class CasePhoto(models.Model):
     file = models.OneToOneField(File, on_delete=models.CASCADE)
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="photos")
+
+
+class PhotoEncoding(models.Model):
+    photo = models.OneToOneField(
+        CasePhoto, on_delete=models.CASCADE, related_name="encoding"
+    )
+    values = ArrayField(models.FloatField())
 
 
 class CaseContact(models.Model):

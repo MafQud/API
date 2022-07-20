@@ -1,6 +1,8 @@
 from datetime import date
+from pathlib import Path
 from typing import Dict, List, Optional
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.utils import timezone
@@ -9,18 +11,23 @@ from firebase_admin.messaging import Message
 from firebase_admin.messaging import Notification as FirebaseNotification
 from rest_framework.exceptions import ValidationError
 
+from api.cases.tasks import activate_case
 from api.common.utils import get_object
 from api.files.models import File
+from api.integrations.ai.model import AIModel
 from api.locations.models import Location
 from api.locations.services import create_location
 from api.notifications.models import Notification
 from api.notifications.services import create_notification
 from api.users.models import User
 
-from .models import Case, CaseContact, CaseDetails, CaseMatch, CasePhoto
+from .models import Case, CaseContact, CaseDetails, CaseMatch, CasePhoto, PhotoEncoding
+
+# from pathlib import Path
 
 Gender = CaseDetails.Gender
 CaseType = Case.Types
+ml_model = None
 
 
 def create_case_photo(*, case: Case, file: File) -> CasePhoto:
@@ -64,9 +71,18 @@ def create_case(
 
     create_case_details(case=case, **details)
 
-    # TODO Factor out to an async function
-    activate_case(case)
+    create_notification(
+        case=case,
+        action=Notification.Action.DETAILS,
+        title="تم رفع الحاله بنجاح",
+        body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
+        level=Notification.Level.INFO,
+        sent_to=case.user,
+    )
+
     case.save()
+
+    activate_case.delay(case.id)
 
     return case
 
@@ -114,18 +130,100 @@ def create_case_match(*, missing: Case, found: Case, score: int) -> CaseMatch:
     return case_match
 
 
-def process_case(case: Case) -> List[Dict[int, int]]:
-    """
-    Send case id and photos to the machine learing model then
-    recives list of ids & scores that matched with the case
-    """
-    return []
+def create_photo_encoding(*, photo: CasePhoto, values: List[float]):
+    photo_encoding = PhotoEncoding(photo=photo, values=values)
+    photo_encoding.full_clean()
+    photo_encoding.save()
+
+    return photo_encoding
 
 
-def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> None:
-    """ """
-    if not matches_list:
-        # TODO refactor notifications
+def process_case(case: Case) -> Dict[int, float]:
+    """
+    Send case photos to the machine learning model to find it's matches
+    """
+
+    # Instantiate the model
+    global ml_model
+    if ml_model is None:
+        all_encodings = PhotoEncoding.objects.all()
+
+        encodings_data = ()
+        encodings_labels = ()
+
+        for photo_encoding in all_encodings:
+            encodings_data, encodings_labels = zip(
+                *[
+                    (photo_encoding.values, photo_encoding.photo.case.id)
+                    for photo_encoding in all_encodings
+                ]
+            )
+        # data = np.load(settings.APPS_DIR / "integrations/ai/data.npz")
+        # encodings_data = data["arr_0"]
+        # encodings_labels = data["arr_1"]
+
+        ml_model = AIModel(
+            facenet_path=settings.APPS_DIR / "integrations/ai/facenet_keras.h5",
+            knn_path=settings.APPS_DIR / "integrations/ai/knn_new.clf",
+            data=encodings_data,
+            labels=encodings_labels,
+        )
+
+    matches = {}
+    new_photos_encodings = []
+    valid_photos = 0
+    # Fetch all case photos
+    photos = case.photos.all()
+
+    # Test each photo in the case against our ML model
+    for photo in photos:
+        # Extract face encoding
+        encoding = ml_model.encode_photo(photo.file.url)
+        if not encoding:
+            continue
+        valid_photos += 1
+        # Record encoding to the database
+        photo_encoding = create_photo_encoding(photo=photo, values=encoding)
+        # Temporary storing new encoding to train the model at the end
+        new_photos_encodings.append(photo_encoding)
+        # Run the model against our new encoding to find case matches
+        case_ids = ml_model.check_face_identity(encoding)
+
+        # Record matches and their scores
+        for case_id in case_ids:
+            # Fetch case
+            match = get_object(Case, pk=case_id)
+
+            # Safety check if case still exists or not
+            if match is None:
+                continue
+
+            matches[match] = matches.get(match, 0) + case_ids[case_id]
+
+    # Checks all photos are invalid
+    if not valid_photos:
+        return {}
+
+    # Normalizing matches scores
+    for match in matches:
+        matches[match] = matches[match] / valid_photos
+
+    # Add new case photo encodings to the model training data
+    new_case_encodings_data = [
+        photo_encoding.values for photo_encoding in new_photos_encodings
+    ]
+
+    # Retrain the model on the new data
+    ml_model.retrain_model(new_case_encodings_data, case.id, Path("api/common"))
+
+    return matches
+
+
+def case_matching_binding(*, case: Case, matches: Dict[int, int]) -> None:
+    """
+    Bind the processed case with it's matches by instantiating CaseMatch objects
+    """
+    if not matches:
         create_notification(
             case=case,
             action=Notification.Action.PUBLISH,
@@ -146,13 +244,9 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
 
         return
 
-    cases_ids = [match["id"] for match in matches_list]
-    cases_scores = [match["score"] for match in matches_list]
-    matches: List[Case] = Case.objects.filter(id__in=cases_ids)
-
     missing = True if case.type == CaseType.MISSING else False
 
-    for match, score in zip(matches, cases_scores):
+    for match, score in matches.items():
         if missing:
             create_case_match(missing=case, found=match, score=score)
         else:
@@ -195,32 +289,6 @@ def case_matching_binding(*, case: Case, matches_list: List[Dict[int, int]]) -> 
     device.send_message(msg)
 
 
-@transaction.atomic
-def activate_case(case: Case):
-    matches = process_case(case)
-    case_matching_binding(case=case, matches_list=matches)
-    case.activate()
-    # TODO success or failure notification
-    create_notification(
-        case=case,
-        action=Notification.Action.DETAILS,
-        title="تم رفع الحاله بنجاح",
-        body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
-        level=Notification.Level.INFO,
-        sent_to=case.user,
-    )
-
-    msg = Message(
-        notification=FirebaseNotification(
-            title="تم رفع الحاله بنجاح",
-            body="جارى البحث عن المفقود وسنقوم بإشعارك فى حاله العثور لأى نتائج",
-        )
-    )
-
-    device = FCMDevice.objects.filter(user=case.user).first()
-    device.send_message(msg)
-
-
 # TODO refactor object permission on view level to some mixin or permission class
 def publish_case(*, case: Case, performed_by: User):
     if case.user != performed_by:
@@ -231,7 +299,6 @@ def publish_case(*, case: Case, performed_by: User):
 
     if case.posted_at:
         raise ValidationError("Case already published")
-
     case.publish()
     case.save()
 
